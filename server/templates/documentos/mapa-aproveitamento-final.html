@@ -1,0 +1,34 @@
+MAPA DE APROVEITAMENTO FINAL DOS ALUNOS
+Referente ao Ano Lectivo {{ANO_LECTIVO}} — II Ciclo (10ª, 11ª, 12ª, 13ª Classes) — Regime Diurno
+
+Nome da Escola: {{NOME_ESCOLA}}
+
+Este documento é gerado automaticamente a partir da pauta final de cada turma do II Ciclo
+no ano lectivo corrente. Cada linha corresponde a um curso oferecido pela escola.
+
+Estrutura da tabela (por Curso × Classe):
+  NOME DO CURSO
+  | 10ª Classe [ Aprovados (M | F | Total) | Reprovados (M | F | Total) | D-AM-T-E (M | F | Total) ]
+  | 11ª Classe [ ... ]
+  | 12ª Classe [ ... ]
+  | 13ª Classe [ ... ]
+  | TOTAL GERAL [ Aptos (M | F) | N/Apt (M | F) | D-AM-T-E (M | F) ]
+
+Critério de Aprovação: o aluno é considerado APTO quando obtém em todas as disciplinas
+uma nota final (MFD) igual ou superior à nota mínima de aprovação ({{NOTA_MINIMA}}).
+Caso contrário, é considerado N/APTO.
+
+D-AM-T-E (D: Desistente; AM: Anulação de Matrícula; T: Transferido; E: Excluído) —
+contabiliza os alunos do curso × classe que se encontram inactivos no sistema.
+
+Variáveis disponíveis no cabeçalho:
+{{NOME_ESCOLA}}, {{ANO_LECTIVO}}, {{DATA_ACTUAL}}, {{MUNICIPIO}}, {{PROVINCIA}},
+{{NOME_DIRECTOR}}, {{NOME_DIRECTOR_PEDAGOGICO}}, {{NOME_SUBDIRECTOR_PEDAGOGICO}},
+{{NOTA_MINIMA}}.
+
+Assinado por: O Subdirector Pedagógico — {{NOME_SUBDIRECTOR_PEDAGOGICO}}.
+
+Para emitir: clique em "Emitir" e depois em "Imprimir", "PDF" ou "Excel".
+O mapa é produzido em A3 paisagem e contém todos os cursos com turmas activas em 10ª–13ª.
+
+{{NOME_ESCOLA}}, {{DATA_ACTUAL}}.

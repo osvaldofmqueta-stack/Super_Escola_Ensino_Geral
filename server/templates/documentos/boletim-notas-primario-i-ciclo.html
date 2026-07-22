@@ -1,0 +1,55 @@
+<div style="font-family:'Times New Roman',serif;padding:24px 32px;color:#000;">
+  <div style="text-align:center;margin-bottom:6px;">
+    <img src="/angola-brasao.png" alt="Insígnia da República de Angola" style="width:70px;height:auto;" />
+  </div>
+  <p style="text-align:center;font-weight:bold;font-size:15pt;margin:2px 0;">República De Angola</p>
+  <p style="text-align:center;font-weight:bold;font-size:15pt;margin:2px 0;">Ministério Da Educação</p>
+  <p style="text-align:center;font-weight:bold;font-size:13pt;margin:2px 0;">ENSINO PRIMÁRIO E I CICLO DO ENSINO SECUNDÁRIO</p>
+  <p style="text-align:center;font-style:italic;font-size:11pt;margin:2px 0;">{{NOME_ESCOLA}}</p>
+  <p style="text-align:center;font-weight:bold;font-size:13pt;margin:10px 0 6px;">Boletim de Notas Final CFB Nº____ {{ANO_LECTIVO}}</p>
+
+  <div style="margin-top:18px;font-size:12pt;">
+    <span>Nome do aluno:&nbsp;<u><strong style="color:#c0392b;">{{NOME_COMPLETO}}</strong></u></span>
+  </div>
+
+  <div style="margin-top:10px;font-size:12pt;">
+    <span><u>&nbsp;{{CLASSE}}&nbsp;</u></span>
+    &nbsp;&nbsp;&nbsp;
+    <span>Nº&nbsp;<u>&nbsp;{{NUMERO_MATRICULA}}&nbsp;</u></span>
+    &nbsp;&nbsp;&nbsp;
+    <span>Sala&nbsp;<u>&nbsp;{{SALA}}&nbsp;</u></span>
+    &nbsp;&nbsp;&nbsp;
+    <span>Turma:&nbsp;<u>&nbsp;{{TURMA}}&nbsp;</u></span>
+  </div>
+
+  {{TABELA_NOTAS_HORIZONTAL}}
+
+  <div style="margin-top:22px;font-size:12pt;">
+    {{MUNICIPIO}}, {{DATA_ACTUAL}}
+  </div>
+
+  <table style="width:100%;margin-top:48px;border-collapse:collapse;">
+    <tr>
+      <td style="text-align:center;font-size:11pt;width:50%;">
+        O (A) Encarregado de Educação<br/>
+        <span style="display:inline-block;border-bottom:1px solid #000;min-width:240px;height:14px;">&nbsp;</span><br/>
+        <strong>{{NOME_ENCARREGADO}}</strong>
+      </td>
+      <td style="text-align:center;font-size:11pt;width:50%;">
+        O (A) Director(a) de Turma<br/>
+        <span style="display:inline-block;border-bottom:1px solid #000;min-width:240px;height:14px;">&nbsp;</span><br/>
+        <strong>{{NOME_DIRECTOR_TURMA}}</strong>
+      </td>
+    </tr>
+  </table>
+
+  <div style="margin-top:42px;text-align:center;font-size:11pt;">
+    O (A) Subdirector(a) Pedagógico(a)<br/>
+    <span style="display:inline-block;border-bottom:1px solid #000;min-width:240px;height:14px;">&nbsp;</span><br/>
+    <strong>{{NOME_SUBDIRECTOR_PEDAGOGICO}}</strong>
+  </div>
+
+  <div style="margin-top:30px;text-align:center;font-weight:bold;font-size:11pt;border-top:1px solid #000;padding-top:8px;">
+    Contactos da Secretaria Pedagógica: {{TELEFONE_ESCOLA}}
+  </div>
+</div>

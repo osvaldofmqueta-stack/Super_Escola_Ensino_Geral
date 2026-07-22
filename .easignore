@@ -1,0 +1,54 @@
+# ── Dependências (EAS reinstala no servidor de build) ─────────────────────────
+node_modules/
+
+# ── Backend (não faz parte do app móvel) ──────────────────────────────────────
+server/
+server_dist/
+
+# ── Build web (gerado pelo Expo export — não necessário no build nativo) ───────
+dist/
+web-build/
+
+# ── Base de dados e migrações (apenas servidor) ────────────────────────────────
+migrations/
+database/
+backups/
+*.sql
+
+# ── Scripts de deploy/manutenção ──────────────────────────────────────────────
+scripts/
+ecosystem.config.cjs
+nixpacks.toml
+fix-git.sh
+fix-neon-config.js
+fix-vapid.js
+check-registros-table.js
+migrate-registros.js
+drizzle.config.ts
+
+# ── Assets web/PWA (não usados no app nativo) ─────────────────────────────────
+public/
+
+# ── Ficheiros de configuração do Replit ───────────────────────────────────────
+.replit
+replit.nix
+replit.md
+.local/
+
+# ── Screenshots e assets de desenvolvimento ───────────────────────────────────
+screenshots/
+attached_assets/
+
+# ── Exemplos e ficheiros temporários ──────────────────────────────────────────
+google-services.json.example
+*.orig.*
+
+# ── Git ───────────────────────────────────────────────────────────────────────
+.git/
+
+# ── Logs e caches ─────────────────────────────────────────────────────────────
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.tsbuildinfo
+.DS_Store

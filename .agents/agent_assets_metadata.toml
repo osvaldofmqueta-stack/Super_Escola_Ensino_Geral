@@ -1,0 +1,110 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "6I2G4cwVXqJFbCQ9RzjPk"
+uri = "file://Decreto_Executivo_04_2026.docx"
+type = "word_document"
+title = "Decreto Executivo Nº 04/2026 — Regulamento de Avaliação das Aprendizagens"
+
+[[outputs]]
+id = "8sX90ly-iC1N_soMMnCmo"
+uri = "file://Decreto_Executivo_04_2026_Completo.docx"
+type = "word_document"
+title = "Decreto Executivo Nº 04/2026 — VERSÃO FINAL (Arts. 1º–40º + Anexos I–VII + Fórmulas)"
+
+[[outputs]]
+id = "qgXVPXZ1TAVGHR2GJAG4Y"
+uri = "file://decreto aplicação Liceu Nº 303/Decreto_Executivo_04_2026_Completo.docx"
+type = "word_document"
+title = "Decreto Executivo Nº 04/2026 — Liceu Nº 303"
+
+[[outputs]]
+id = "pKZR_pOyZywlUdOyo091P"
+uri = "file://PLANO_CURRICULAR_ENSINO_SECUNDARIO_GERAL.docx"
+type = "word_document"
+title = "Plano Curricular do Ensino Secundário Geral — DOCX"
+
+[[outputs]]
+id = "fFVF6Ne2WIy-b1p-Bmgm3"
+uri = "file://attached_assets/super-escola-banner.png"
+type = "image"
+title = "Super Escola — Banner Multi-dispositivo"
+
+[[outputs]]
+id = "v761i8XxTxmcm7D0Ckyxy"
+uri = "file://super-escola-banner.png"
+type = "image"
+title = "Super Escola — Banner Multi-dispositivo"
+
+[[outputs]]
+id = "fr7laDUqZiO3PIdq0Nor3"
+uri = "file://apresentacao/SIGA_Apresentacao_Admin.docx"
+type = "word_document"
+title = "SIGA v3 — Apresentação Administrador"
+
+[[outputs]]
+id = "KODUQlk77SkuTxZ4iXV5z"
+uri = "file://apresentacao/SIGA_Apresentacao_Director.docx"
+type = "word_document"
+title = "SIGA v3 — Apresentação Director Pedagógico"
+
+[[outputs]]
+id = "RlRJNDJSmuQsZxPTt-tkh"
+uri = "file://apresentacao/SIGA_Apresentacao_Tecnico_Pedagogico.docx"
+type = "word_document"
+title = "SIGA — Apresentação Técnico Pedagógico"
+
+[[outputs]]
+id = "rJ8EV-IyqJGLuyxei8SpX"
+uri = "file://apresentacao/SIGA_Apresentacao_Chefe_Secretaria.docx"
+type = "word_document"
+title = "SIGA — Apresentação Chefe de Secretaria"
+
+[[outputs]]
+id = "UnsN0cDHqNfcyzSi4dLvC"
+uri = "file://apresentacao/SIGA_Apresentacao_Professor.docx"
+type = "word_document"
+title = "SIGA — Apresentação Professor"
+
+[[outputs]]
+id = "CrXM-kKIGwJ6DqNsUzSrX"
+uri = "file://apresentacao/SIGA_Apresentacao_Financeiro.docx"
+type = "word_document"
+title = "SIGA — Apresentação Serviços Financeiros"
+
+[[outputs]]
+id = "7fpy4llE7BR3uESzrFMdk"
+uri = "file://apresentacao/SIGA_Apresentacao_Recursos_Humanos.docx"
+type = "word_document"
+title = "SIGA — Apresentação Recursos Humanos"
+
+[[outputs]]
+id = "5rBkyF_3KcXqrB8JsL9gv"
+uri = "file://apresentacao/SIGA_Apresentacao_Aluno.docx"
+type = "word_document"
+title = "SIGA — Apresentação Aluno"
+
+[[outputs]]
+id = "WBsmwsSoz2gg75zyIuKNC"
+uri = "file://apresentacao/SIGA_Apresentacao_Encarregado.docx"
+type = "word_document"
+title = "SIGA — Apresentação Encarregado de Educação"
+
+[[outputs]]
+id = "9zhG-EAOVII0VPysP5X9J"
+uri = "file://apresentacao/SIGA_Apresentacao_PCA.docx"
+type = "word_document"
+title = "SIGA — Apresentação PCA"
+
+[[outputs]]
+id = "d8xNWIysa86HZvpxtLkTs"
+uri = "file://SIGA_Portfolio_Servicos.pdf"
+type = "pdf"
+title = "SIGA Portfolio de Serviços — Planos Prata / Golden / Ruby"
+
+[[outputs]]
+id = "i98FGRAsVgRl3JfoVUQlG"
+uri = "file://SIGA_Portfolio_Imagens.zip"
+type = "unspecified"
+title = "SIGA Portfolio — 16 Imagens PNG"

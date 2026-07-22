@@ -1,0 +1,75 @@
+name: Gerar APK (EAS Build)
+
+on:
+  # Disparo manual no GitHub → Actions → "Gerar APK"
+  workflow_dispatch:
+    inputs:
+      perfil:
+        description: 'Perfil de build'
+        required: true
+        default: 'preview'
+        type: choice
+        options:
+          - preview
+          - production
+      mensagem:
+        description: 'Notas da versão (opcional)'
+        required: false
+        default: ''
+
+  # Também dispara automaticamente quando é criada uma tag v*.*.*
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build-apk:
+    name: Build APK → EAS (${{ github.event.inputs.perfil || 'preview' }})
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar dependências
+        run: npm install --legacy-peer-deps
+
+      - name: Instalar EAS CLI
+        run: npm install -g eas-cli
+
+      - name: Verificar autenticação EAS
+        run: eas whoami
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build APK no EAS
+        run: |
+          PERFIL="${{ github.event.inputs.perfil || 'preview' }}"
+          MENSAGEM="${{ github.event.inputs.mensagem }}"
+          echo "🔨 A iniciar build EAS — perfil: $PERFIL"
+          if [ -n "$MENSAGEM" ]; then
+            echo "   Notas: $MENSAGEM"
+          fi
+          eas build \
+            --platform android \
+            --profile "$PERFIL" \
+            --non-interactive \
+            --no-wait
+          echo "✅ Build submetido ao EAS! Acompanha o progresso em: https://expo.dev/accounts/[conta]/projects/queta-school/builds"
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Resumo
+        run: |
+          echo "## 📱 APK em geração" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Perfil:** ${{ github.event.inputs.perfil || 'preview' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Acompanhar:** [expo.dev/builds](https://expo.dev/accounts/queta/projects/queta-school/builds)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "O APK ficará disponível para download no painel do EAS quando o build terminar (~10-15 min)." >> $GITHUB_STEP_SUMMARY

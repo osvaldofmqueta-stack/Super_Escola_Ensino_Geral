@@ -1,0 +1,24 @@
+[phases.setup]
+nixPkgs = [
+  "nodejs_20",
+  "chromium",
+  "nss",
+  "freetype",
+  "harfbuzz",
+  "ca-certificates",
+  "liberation_ttf",
+  "fontconfig",
+  "postgresql"
+]
+
+[phases.install]
+cmds = ["npm install --legacy-peer-deps"]
+
+[phases.build]
+cmds = [
+  "npx expo export -p web",
+  "npm run server:build"
+]
+
+[start]
+cmd = "PUPPETEER_SKIP_DOWNLOAD=true PUPPETEER_EXECUTABLE_PATH=$(which chromium) node server_dist/index.js"

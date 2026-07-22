@@ -1,0 +1,55 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+web-build/
+expo-env.d.ts
+
+# dist/ is intentionally NOT ignored so the pre-built frontend is committed to git
+# This allows Render to deploy without needing the memory-intensive Expo build step
+
+# Native
+ios/
+# android/ é gerido pelo Capacitor — commitar para deploy local
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env*.local
+
+# Cursor/local artifacts
+.local/
+
+# GitHub Actions workflows — geridos via Replit e commitados normalmente
+
+# Ficheiros sensíveis — NUNCA commitar
+.env
+.env.local
+.env.production
+
+# typescript
+*.tsbuildinfo
+.vercel
+
+# server_dist/ is committed intentionally — production uses compiled JS (no tsx needed)
+
+.env

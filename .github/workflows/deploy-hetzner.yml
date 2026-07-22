@@ -1,0 +1,408 @@
+name: 🚀 Deploy → Hetzner (Produção)
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Super Escola / SIGA — Pipeline completo de CI/CD para o servidor Hetzner
+#
+#  Dispara em:
+#    • Push para o branch `main`
+#    • Manualmente no GitHub → Actions → "Run workflow"
+#
+#  O que faz:
+#    1. Verifica secrets obrigatórios
+#    2. Instala dependências npm
+#    3. Reconstrói o frontend (Expo Web → dist/)
+#    4. Copia fontes necessárias
+#    5. Envia todos os ficheiros para o servidor via rsync
+#    6. Actualiza o .env no servidor com TODOS os secrets
+#    7. Instala dependências no servidor
+#    8. Reinicia a aplicação via PM2 (zero-downtime)
+#    9. Verifica saúde da aplicação em produção
+#   10. Publica resumo no GitHub Actions
+#
+#  Secrets necessários (GitHub → Settings → Secrets → Actions):
+#    Obrigatórios:
+#      HETZNER_SSH_KEY      — chave privada SSH (multi ou single-line)
+#      NEON_DATABASE_URL    — connection string Neon PostgreSQL
+#      JWT_SECRET           — segredo JWT estável
+#    Recomendados:
+#      RESEND_API_KEY       — emails transaccionais (Resend)
+#      GEMINI_API_KEY       — Assistente IA (Google Gemini)
+#      TELEGRAM_BOT_TOKEN   — Bot Telegram (OTP + notificações)
+#    Opcionais:
+#      VAPID_PUBLIC_KEY     — Push notifications (web)
+#      VAPID_PRIVATE_KEY    — Push notifications (web)
+#      EXPO_TOKEN           — Builds EAS / OTA updates
+# ─────────────────────────────────────────────────────────────────────────────
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      skip_build:
+        description: 'Saltar rebuild do frontend (dist/ já actualizado)?'
+        required: false
+        default: 'false'
+        type: choice
+        options: ['false', 'true']
+      force_npm:
+        description: 'Forçar npm install no servidor mesmo sem package-lock.json alterado?'
+        required: false
+        default: 'false'
+        type: choice
+        options: ['false', 'true']
+
+env:
+  HETZNER_HOST: 178.104.228.85
+  HETZNER_USER: root
+  DEPLOY_PATH: /opt/superescola
+  APP_URL: https://www.liceun303.live
+  PM2_APP: superescola
+
+jobs:
+  deploy:
+    name: 🏗️ Build & Deploy → Hetzner (${{ env.HETZNER_HOST }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      # ── 1. Checkout ──────────────────────────────────────────────────────────
+      - name: 📥 Checkout do código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ── 2. Verificar secrets obrigatórios ────────────────────────────────────
+      - name: 🔑 Verificar secrets obrigatórios
+        run: |
+          MISSING=""
+          [ -z "${{ secrets.HETZNER_SSH_KEY }}"   ] && MISSING="${MISSING}\n  ✗ HETZNER_SSH_KEY"
+          [ -z "${{ secrets.NEON_DATABASE_URL }}" ] && MISSING="${MISSING}\n  ✗ NEON_DATABASE_URL"
+          [ -z "${{ secrets.JWT_SECRET }}"        ] && MISSING="${MISSING}\n  ✗ JWT_SECRET"
+          if [ -n "$MISSING" ]; then
+            echo -e "❌ Secrets obrigatórios em falta (GitHub → Settings → Secrets → Actions):${MISSING}"
+            echo ""
+            echo "Adiciona os secrets e faz push novamente."
+            exit 1
+          fi
+          echo "✅ Todos os secrets obrigatórios estão configurados."
+          echo ""
+          [ -n "${{ secrets.RESEND_API_KEY }}"      ] && echo "  ✓ RESEND_API_KEY"      || echo "  ⚠ RESEND_API_KEY (não configurado — emails desactivados)"
+          [ -n "${{ secrets.GEMINI_API_KEY }}"      ] && echo "  ✓ GEMINI_API_KEY"      || echo "  ⚠ GEMINI_API_KEY (não configurado — IA desactivada)"
+          [ -n "${{ secrets.TELEGRAM_BOT_TOKEN }}"  ] && echo "  ✓ TELEGRAM_BOT_TOKEN"  || echo "  ⚠ TELEGRAM_BOT_TOKEN (não configurado)"
+          [ -n "${{ secrets.VAPID_PUBLIC_KEY }}"    ] && echo "  ✓ VAPID_PUBLIC_KEY"    || echo "  ⚠ VAPID_PUBLIC_KEY (push notifications desactivadas)"
+
+      # ── 3. Configurar Node.js ─────────────────────────────────────────────────
+      - name: 🔧 Configurar Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # ── 4. Instalar dependências ──────────────────────────────────────────────
+      - name: 📦 Instalar dependências npm
+        run: |
+          echo "→ npm install..."
+          npm install --legacy-peer-deps
+          echo "✅ Dependências instaladas ($(ls node_modules | wc -l) módulos)"
+
+      # ── 5. Build do frontend ──────────────────────────────────────────────────
+      - name: 🏗️ Reconstruir frontend Expo Web → dist/
+        if: ${{ github.event.inputs.skip_build != 'true' }}
+        env:
+          EXPO_PUBLIC_DOMAIN: www.liceun303.live
+          NODE_ENV: production
+        run: |
+          echo "→ npx expo export -p web..."
+          npx expo export -p web --output-dir dist 2>&1
+          echo ""
+          echo "✅ Frontend reconstruído:"
+          echo "   $(du -sh dist/ | cut -f1) — $(find dist -type f | wc -l) ficheiros"
+
+      - name: 📋 Usar dist/ existente (build saltado)
+        if: ${{ github.event.inputs.skip_build == 'true' }}
+        run: |
+          echo "⏩ Rebuild saltado — a usar dist/ já existente no repositório"
+          [ -d dist ] && echo "  dist/: $(du -sh dist/ | cut -f1)" || echo "  ⚠️  dist/ não existe no repositório!"
+
+      # ── 6. Copiar fontes necessárias ──────────────────────────────────────────
+      - name: 🔤 Copiar fontes para dist/fonts/
+        run: |
+          mkdir -p dist/fonts
+          INTER_BASE="node_modules/@expo-google-fonts/inter"
+          copied=0
+          for variant in "400Regular" "500Medium" "600SemiBold" "700Bold"; do
+            f="${INTER_BASE}/${variant}/Inter_${variant}.ttf"
+            [ -f "$f" ] && cp "$f" dist/fonts/ && copied=$((copied+1))
+          done
+          [ $copied -gt 0 ] && echo "✅ $copied fontes Inter copiadas para dist/fonts/" \
+                             || echo "⚠️  @expo-google-fonts/inter não encontrado — fontes omitidas"
+
+      # ── 7. Preparar chave SSH ─────────────────────────────────────────────────
+      - name: 🔐 Preparar chave SSH
+        id: ssh
+        run: |
+          KEY_FILE=$(mktemp /tmp/sshkey_XXXXXX)
+          chmod 600 "$KEY_FILE"
+
+          # O secret pode estar numa só linha (sem \n) ou com newlines reais.
+          # Reformatar correctamente em ambos os casos.
+          RAW="${{ secrets.HETZNER_SSH_KEY }}"
+          if echo "$RAW" | grep -q "BEGIN OPENSSH PRIVATE KEY"; then
+            BODY=$(echo "$RAW" \
+              | sed 's/-----BEGIN OPENSSH PRIVATE KEY-----//' \
+              | sed 's/-----END OPENSSH PRIVATE KEY-----//' \
+              | tr -d ' \n\r\t')
+            {
+              echo "-----BEGIN OPENSSH PRIVATE KEY-----"
+              echo "$BODY" | fold -w 64
+              echo "-----END OPENSSH PRIVATE KEY-----"
+            } > "$KEY_FILE"
+          else
+            echo "$RAW" > "$KEY_FILE"
+          fi
+
+          if ! ssh-keygen -l -f "$KEY_FILE" &>/dev/null; then
+            echo "❌ Chave SSH inválida — verifica o secret HETZNER_SSH_KEY"
+            exit 1
+          fi
+          echo "✅ Chave SSH válida"
+          echo "key_file=$KEY_FILE" >> "$GITHUB_OUTPUT"
+
+      # ── 8. Testar ligação ao servidor ─────────────────────────────────────────
+      - name: 🌐 Testar ligação SSH ao servidor
+        run: |
+          ssh -i "${{ steps.ssh.outputs.key_file }}" \
+              -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o BatchMode=yes \
+              ${{ env.HETZNER_USER }}@${{ env.HETZNER_HOST }} \
+              "echo '✅ Ligação SSH estabelecida — '$(hostname) && uptime"
+
+      # ── 9. Sincronizar ficheiros via rsync ────────────────────────────────────
+      - name: 📤 Sincronizar ficheiros → servidor (rsync)
+        run: |
+          sudo apt-get install -y -qq rsync 2>/dev/null
+          echo "→ rsync para ${{ env.HETZNER_HOST }}:${{ env.DEPLOY_PATH }}/"
+          rsync -az --delete \
+            -e "ssh -i ${{ steps.ssh.outputs.key_file }} -o StrictHostKeyChecking=no -o ConnectTimeout=30" \
+            --exclude='node_modules/' \
+            --exclude='.git/' \
+            --exclude='.expo/' \
+            --exclude='.agents/' \
+            --exclude='.local/' \
+            --exclude='*.log' \
+            --exclude='.env' \
+            --exclude='.env.*' \
+            --exclude='*.apk' \
+            --exclude='*.aab' \
+            --exclude='android/' \
+            --exclude='ios/' \
+            --exclude='/tmp/' \
+            --info=progress2 \
+            ./ ${{ env.HETZNER_USER }}@${{ env.HETZNER_HOST }}:${{ env.DEPLOY_PATH }}/
+          echo "✅ Ficheiros sincronizados"
+
+      # ── 10. Actualizar .env no servidor ──────────────────────────────────────
+      - name: 🔐 Actualizar .env no servidor
+        env:
+          NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+          JWT_SECRET:        ${{ secrets.JWT_SECRET }}
+          RESEND_API_KEY:    ${{ secrets.RESEND_API_KEY }}
+          GEMINI_API_KEY:    ${{ secrets.GEMINI_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          VAPID_PUBLIC_KEY:  ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+        run: |
+          # Gerar .env no runner (nunca em disco permanente — apenas em memória/tmp)
+          ENV_TMP=$(mktemp /tmp/siga_env_XXXXXX)
+
+          cat > "$ENV_TMP" << 'STATICEOF'
+          # ══════════════════════════════════════════════════════
+          #  Super Escola / SIGA — Configuração de Produção
+          #  Gerido automaticamente pelo GitHub Actions.
+          #  NÃO EDITAR MANUALMENTE.
+          # ══════════════════════════════════════════════════════
+
+          # ── Servidor ──────────────────────────────────────────
+          NODE_ENV=production
+          PORT=5000
+          SERVE_STATIC_WEB=1
+
+          # ── Puppeteer / PDF ───────────────────────────────────
+          PUPPETEER_SKIP_DOWNLOAD=true
+          PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
+          # ── Performance ───────────────────────────────────────
+          UV_THREADPOOL_SIZE=16
+
+          # ── Email ─────────────────────────────────────────────
+          EMAIL_FROM=noreply@liceun303.live
+
+          # ── URL pública ───────────────────────────────────────
+          APP_URL=https://www.liceun303.live
+          STATICEOF
+
+          # Remover indentação do heredoc
+          sed -i 's/^[[:space:]]*//' "$ENV_TMP"
+
+          # Adicionar secrets dinamicamente (evita expansão dentro de heredoc)
+          {
+            echo ""
+            echo "# ── Base de dados (Neon) ──────────────────────────────"
+            echo "NEON_DATABASE_URL=${NEON_DATABASE_URL}"
+            echo "DATABASE_URL=${NEON_DATABASE_URL}"
+            echo ""
+            echo "# ── Autenticação JWT ──────────────────────────────────"
+            echo "JWT_SECRET=${JWT_SECRET}"
+            echo ""
+            echo "# ── Email (Resend) ────────────────────────────────────"
+            [ -n "${RESEND_API_KEY}" ] && echo "RESEND_API_KEY=${RESEND_API_KEY}"
+            echo ""
+            echo "# ── Inteligência Artificial (Google Gemini) ──────────"
+            [ -n "${GEMINI_API_KEY}" ] && echo "GEMINI_API_KEY=${GEMINI_API_KEY}"
+            echo ""
+            echo "# ── Telegram ─────────────────────────────────────────"
+            [ -n "${TELEGRAM_BOT_TOKEN}" ] && echo "TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}"
+            echo ""
+            echo "# ── Push Notifications (VAPID) ───────────────────────"
+            [ -n "${VAPID_PUBLIC_KEY}" ]  && echo "VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}"
+            [ -n "${VAPID_PRIVATE_KEY}" ] && echo "VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}"
+          } >> "$ENV_TMP"
+
+          # Enviar .env para o servidor
+          scp -i "${{ steps.ssh.outputs.key_file }}" \
+              -o StrictHostKeyChecking=no -o ConnectTimeout=30 \
+              "$ENV_TMP" \
+              ${{ env.HETZNER_USER }}@${{ env.HETZNER_HOST }}:${{ env.DEPLOY_PATH }}/.env
+
+          # Proteger o ficheiro
+          ssh -i "${{ steps.ssh.outputs.key_file }}" \
+              -o StrictHostKeyChecking=no -o BatchMode=yes \
+              ${{ env.HETZNER_USER }}@${{ env.HETZNER_HOST }} \
+              "chmod 600 ${{ env.DEPLOY_PATH }}/.env && echo '✅ .env actualizado e protegido (chmod 600)'"
+
+          # Limpar ficheiro temporário
+          rm -f "$ENV_TMP"
+
+      # ── 11. Instalar deps e reiniciar no servidor ─────────────────────────────
+      - name: ⚙️ npm install + PM2 restart no servidor
+        run: |
+          ssh -i "${{ steps.ssh.outputs.key_file }}" \
+              -o StrictHostKeyChecking=no -o ConnectTimeout=90 -o BatchMode=yes \
+              ${{ env.HETZNER_USER }}@${{ env.HETZNER_HOST }} \
+              bash -s << 'REMOTE_CMD'
+            set -e
+            cd /opt/superescola
+
+            echo "══════════════════════════════════════════"
+            echo " Super Escola — Actualização do servidor"
+            echo " $(date '+%d/%m/%Y %H:%M:%S')"
+            echo "══════════════════════════════════════════"
+
+            # Garantir diretório de logs
+            mkdir -p /var/log/superescola
+
+            # Instalar dependências (inclui devDeps para tsx)
+            echo ""
+            echo "→ npm install (legado)..."
+            export PUPPETEER_SKIP_DOWNLOAD=true
+            npm install --legacy-peer-deps 2>&1 | tail -8
+            echo "✅ npm install concluído"
+
+            # Reiniciar com PM2 (zero-downtime reload)
+            echo ""
+            echo "→ PM2 reload/restart..."
+            if pm2 list | grep -q "superescola"; then
+              pm2 reload superescola --update-env
+              echo "✅ PM2 reload zero-downtime concluído"
+            else
+              pm2 start ecosystem.config.cjs
+              echo "✅ PM2 start (primeira inicialização)"
+            fi
+
+            # Guardar lista PM2 para auto-start no boot
+            pm2 save --force
+
+            # Aguardar estabilização
+            sleep 6
+
+            # Mostrar estado
+            echo ""
+            echo "── Estado PM2 ──────────────────────────"
+            pm2 list
+            echo ""
+            echo "── Últimas 15 linhas de log ─────────────"
+            pm2 logs superescola --lines 15 --nostream 2>/dev/null || true
+          REMOTE_CMD
+
+      # ── 12. Health check ──────────────────────────────────────────────────────
+      - name: 🌡️ Verificar saúde da aplicação em produção
+        run: |
+          echo "→ A aguardar aplicação estabilizar..."
+          sleep 8
+
+          STATUS=$(curl -s --max-time 25 \
+            -o /dev/null -w "%{http_code}" \
+            "${{ env.APP_URL }}/api/config" 2>/dev/null || echo "000")
+
+          echo "   HTTP Status: $STATUS"
+
+          if [ "$STATUS" = "200" ]; then
+            echo ""
+            echo "✅ Deploy concluído com sucesso!"
+            echo "   URL: ${{ env.APP_URL }}"
+            echo "   Status: HTTP $STATUS"
+          else
+            echo ""
+            echo "⚠️  Aplicação retornou HTTP $STATUS"
+            echo "   Para ver logs: ssh root@${{ env.HETZNER_HOST }} 'pm2 logs superescola --lines 50'"
+            echo ""
+            echo "   A verificar logs remotamente..."
+            ssh -i "${{ steps.ssh.outputs.key_file }}" \
+                -o StrictHostKeyChecking=no -o BatchMode=yes \
+                ${{ env.HETZNER_USER }}@${{ env.HETZNER_HOST }} \
+                "pm2 logs superescola --lines 30 --nostream 2>/dev/null || true"
+            exit 1
+          fi
+
+      # ── 13. Limpar chave SSH ───────────────────────────────────────────────────
+      - name: 🧹 Limpar chave SSH temporária
+        if: always()
+        run: |
+          rm -f "${{ steps.ssh.outputs.key_file }}" 2>/dev/null || true
+          echo "✅ Chave SSH removida"
+
+      # ── 14. Resumo no GitHub Actions ──────────────────────────────────────────
+      - name: 📊 Publicar resumo do deploy
+        if: always()
+        run: |
+          COMMIT_MSG=$(git log -1 --format='%s' | cut -c1-80)
+          COMMIT_SHA="${{ github.sha }}"
+          SHORT_SHA="${COMMIT_SHA:0:7}"
+          ACTOR="${{ github.actor }}"
+          RUN_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          STATUS="${{ job.status }}"
+
+          [ "$STATUS" = "success" ] && STATUS_ICON="✅" || STATUS_ICON="❌"
+
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## ${STATUS_ICON} Deploy Super Escola / SIGA
+
+          | Campo            | Valor                                                        |
+          |:-----------------|:-------------------------------------------------------------|
+          | **Estado**       | ${STATUS_ICON} ${STATUS}                                     |
+          | **Servidor**     | \`${{ env.HETZNER_HOST }}\` → ${{ env.DEPLOY_PATH }}         |
+          | **URL**          | [${{ env.APP_URL }}](${{ env.APP_URL }})                     |
+          | **Commit**       | \`${SHORT_SHA}\` — ${COMMIT_MSG}                             |
+          | **Enviado por**  | @${ACTOR}                                                    |
+          | **Branch**       | \`${{ github.ref_name }}\`                                   |
+          | **Data/Hora**    | $(date '+%d/%m/%Y %H:%M UTC')                                |
+
+          ### Secrets configurados
+          $([ -n "${{ secrets.NEON_DATABASE_URL }}" ]    && echo "- ✅ NEON_DATABASE_URL" || echo "- ❌ NEON_DATABASE_URL (obrigatório!)")
+          $([ -n "${{ secrets.JWT_SECRET }}" ]           && echo "- ✅ JWT_SECRET"         || echo "- ❌ JWT_SECRET (obrigatório!)")
+          $([ -n "${{ secrets.RESEND_API_KEY }}" ]       && echo "- ✅ RESEND_API_KEY"      || echo "- ⚠️ RESEND_API_KEY (emails desactivados)")
+          $([ -n "${{ secrets.GEMINI_API_KEY }}" ]       && echo "- ✅ GEMINI_API_KEY"      || echo "- ⚠️ GEMINI_API_KEY (IA desactivada)")
+          $([ -n "${{ secrets.TELEGRAM_BOT_TOKEN }}" ]   && echo "- ✅ TELEGRAM_BOT_TOKEN"  || echo "- ⚠️ TELEGRAM_BOT_TOKEN (Telegram desactivado)")
+          $([ -n "${{ secrets.VAPID_PUBLIC_KEY }}" ]     && echo "- ✅ VAPID_PUBLIC_KEY"    || echo "- ⚠️ VAPID_PUBLIC_KEY (push desactivado)")
+          EOF

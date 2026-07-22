@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Em Manutenção — Super Escola</title>
+  <meta name="theme-color" content="#050d18" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #D4AF37;
+      --gold-light: #f4e9c8;
+      --gold-dark: #b8941f;
+      --navy: #050d18;
+      --navy-mid: #0d1f35;
+      --navy-soft: #0a1828;
+    }
+
+    html, body {
+      min-height: 100%;
+      min-height: -webkit-fill-available;
+      background: var(--navy);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -webkit-text-size-adjust: 100%;
+      overflow-x: hidden;
+    }
+
+    /* ── Background ──────────────────────────────── */
+    .bg-gradient {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(212,175,55,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(13,31,53,0.8) 0%, transparent 70%),
+        linear-gradient(160deg, #050d18 0%, #0a1320 40%, #050d18 100%);
+      z-index: 0;
+    }
+
+    /* ── Grid overlay ────────────────────────────── */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(212,175,55,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(212,175,55,0.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+      z-index: 0;
+    }
+
+    /* ── Floating orbs ───────────────────────────── */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+      animation: orb-float 8s ease-in-out infinite alternate;
+    }
+    .orb-1 {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(212,175,55,0.06) 0%, transparent 70%);
+      top: -200px; left: -150px;
+    }
+    .orb-2 {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(13,31,53,0.9) 0%, transparent 70%);
+      bottom: -100px; right: -100px;
+      animation-delay: -4s;
+    }
+    @keyframes orb-float {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(30px, -20px) scale(1.05); }
+    }
+
+    /* ── Layout ──────────────────────────────────── */
+    .page {
+      position: relative;
+      z-index: 1;
+      min-height: 100dvh;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px 60px;
+    }
+
+    /* ── Card ────────────────────────────────────── */
+    .card {
+      width: 100%;
+      max-width: 520px;
+      background: rgba(13, 31, 53, 0.55);
+      border: 1px solid rgba(212,175,55,0.18);
+      border-radius: 24px;
+      padding: 48px 40px;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-shadow:
+        0 0 0 1px rgba(212,175,55,0.06),
+        0 32px 80px rgba(0,0,0,0.6),
+        inset 0 1px 0 rgba(212,175,55,0.1);
+      text-align: center;
+      animation: card-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    @keyframes card-in {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Logo ────────────────────────────────────── */
+    .logo-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .logo-icon {
+      width: 48px; height: 48px;
+      background: linear-gradient(135deg, #D4AF37 0%, #b8941f 100%);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 4px 20px rgba(212,175,55,0.3);
+      flex-shrink: 0;
+    }
+    .logo-text { text-align: left; }
+    .logo-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--gold-light);
+      letter-spacing: 0.3px;
+      line-height: 1.1;
+    }
+    .logo-sub {
+      font-size: 11px;
+      color: rgba(212,175,55,0.55);
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    /* ── Gear icon animated ──────────────────────── */
+    .gear-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+    .gear-ring {
+      position: relative;
+      width: 88px; height: 88px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .gear-ring::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      background: linear-gradient(135deg, rgba(212,175,55,0.4), transparent, rgba(212,175,55,0.4)) border-box;
+      -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: destination-out;
+      mask-composite: exclude;
+      animation: ring-spin 4s linear infinite;
+    }
+    .gear-ring::after {
+      content: '';
+      position: absolute;
+      inset: 6px;
+      border-radius: 50%;
+      border: 1px solid rgba(212,175,55,0.12);
+    }
+    @keyframes ring-spin { to { transform: rotate(360deg); } }
+    .gear-emoji {
+      font-size: 36px;
+      animation: gear-spin 6s linear infinite;
+      position: relative; z-index: 1;
+    }
+    @keyframes gear-spin { to { transform: rotate(360deg); } }
+
+    /* ── Headings ────────────────────────────────── */
+    .title {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--gold-light);
+      margin-bottom: 10px;
+      letter-spacing: -0.3px;
+      line-height: 1.25;
+    }
+    .subtitle {
+      font-size: 14px;
+      color: rgba(244,233,200,0.5);
+      font-weight: 500;
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+    .subtitle br { display: none; }
+
+    /* ── Message box ─────────────────────────────── */
+    .message-box {
+      background: rgba(212,175,55,0.07);
+      border: 1px solid rgba(212,175,55,0.2);
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      text-align: left;
+    }
+    .message-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+    .message-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .message-text {
+      font-size: 14px;
+      color: rgba(244,233,200,0.8);
+      line-height: 1.55;
+      font-weight: 500;
+    }
+
+    /* ── Divider ─────────────────────────────────── */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(212,175,55,0.2), transparent);
+      margin-bottom: 24px;
+    }
+
+    /* ── Progress bar ────────────────────────────── */
+    .progress-wrap { margin-bottom: 24px; }
+    .progress-label {
+      display: flex; justify-content: space-between;
+      font-size: 11px; color: rgba(212,175,55,0.5);
+      letter-spacing: 1px; text-transform: uppercase;
+      margin-bottom: 10px; font-weight: 600;
+    }
+    .progress-track {
+      width: 100%; height: 3px;
+      background: rgba(212,175,55,0.1);
+      border-radius: 99px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold-dark), var(--gold), #f4e9c8, var(--gold));
+      background-size: 300% 100%;
+      border-radius: 99px;
+      animation: progress-move 2s ease-in-out infinite;
+      width: 40%;
+    }
+    @keyframes progress-move {
+      0%   { background-position: 0% 0%; }
+      50%  { background-position: 100% 0%; }
+      100% { background-position: 0% 0%; }
+    }
+
+    /* ── Status pills ────────────────────────────── */
+    .status-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .status-pill {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(13,31,53,0.7);
+      border: 1px solid rgba(212,175,55,0.15);
+      border-radius: 99px;
+      padding: 6px 14px;
+      font-size: 11.5px;
+      color: rgba(244,233,200,0.55);
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+    .pill-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--gold);
+      animation: pulse-dot 2s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    .pill-dot.green { background: #22c55e; }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.7); }
+    }
+
+    /* ── Timer ───────────────────────────────────── */
+    .timer-row {
+      display: flex; align-items: center; justify-content: center;
+      gap: 6px; margin-bottom: 24px;
+      font-size: 12px; color: rgba(212,175,55,0.45);
+      letter-spacing: 0.5px;
+    }
+    .timer-icon { font-size: 14px; }
+
+    /* ── Admin bypass ────────────────────────────── */
+    .admin-bypass {
+      display: none;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(212,175,55,0.1);
+    }
+    .admin-bypass.visible { display: block; }
+    .bypass-btn {
+      background: linear-gradient(135deg, rgba(212,175,55,0.15), rgba(212,175,55,0.08));
+      border: 1px solid rgba(212,175,55,0.3);
+      border-radius: 12px;
+      color: var(--gold);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 14px 24px;
+      cursor: pointer;
+      width: 100%;
+      letter-spacing: 0.3px;
+      transition: background 0.2s, border-color 0.2s;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    .bypass-btn:hover, .bypass-btn:active {
+      background: linear-gradient(135deg, rgba(212,175,55,0.22), rgba(212,175,55,0.12));
+      border-color: rgba(212,175,55,0.5);
+    }
+    .bypass-note {
+      font-size: 11px;
+      color: rgba(212,175,55,0.35);
+      margin-top: 8px;
+      letter-spacing: 0.3px;
+    }
+
+    /* ── Footer ──────────────────────────────────── */
+    .footer {
+      margin-top: 28px;
+      text-align: center;
+    }
+    .footer-logo {
+      font-size: 12px;
+      color: rgba(212,175,55,0.3);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .footer-copy {
+      font-size: 10.5px;
+      color: rgba(244,233,200,0.2);
+      margin-top: 4px;
+      letter-spacing: 0.3px;
+    }
+
+    /* ═══════════════════════════════════════════════
+       RESPONSIVE — TABLET (≤ 600px)
+    ═══════════════════════════════════════════════ */
+    @media (max-width: 600px) {
+      .page {
+        padding: 24px 16px 48px;
+        justify-content: flex-start;
+        padding-top: max(32px, env(safe-area-inset-top, 32px));
+      }
+      .card {
+        padding: 32px 24px;
+        border-radius: 20px;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+      }
+      .logo-wrap { margin-bottom: 24px; gap: 10px; }
+      .logo-icon { width: 42px; height: 42px; font-size: 21px; border-radius: 12px; }
+      .logo-title { font-size: 17px; }
+      .logo-sub { font-size: 10px; letter-spacing: 2px; }
+      .gear-wrap { margin-bottom: 20px; }
+      .gear-ring { width: 76px; height: 76px; }
+      .gear-emoji { font-size: 30px; }
+      .title { font-size: 22px; }
+      .subtitle { font-size: 13.5px; margin-bottom: 20px; }
+      .message-box { padding: 14px 14px; gap: 10px; }
+      .message-text { font-size: 13.5px; }
+      .progress-wrap { margin-bottom: 20px; }
+      .status-row { gap: 6px; margin-bottom: 20px; }
+      .status-pill { font-size: 11px; padding: 5px 12px; }
+      .timer-row { margin-bottom: 20px; font-size: 11.5px; }
+      .footer { margin-top: 20px; }
+      .footer-logo { font-size: 11px; }
+      .footer-copy { font-size: 10px; }
+      .orb-1 { width: 280px; height: 280px; top: -120px; left: -100px; }
+      .orb-2 { width: 240px; height: 240px; bottom: -60px; right: -60px; }
+    }
+
+    /* ═══════════════════════════════════════════════
+       RESPONSIVE — MOBILE PEQUENO (≤ 400px)
+    ═══════════════════════════════════════════════ */
+    @media (max-width: 400px) {
+      .page {
+        padding: 20px 12px 40px;
+        padding-top: max(24px, env(safe-area-inset-top, 24px));
+      }
+      .card {
+        padding: 24px 18px;
+        border-radius: 18px;
+      }
+      .logo-wrap { gap: 8px; margin-bottom: 20px; }
+      .logo-icon { width: 38px; height: 38px; font-size: 19px; border-radius: 10px; }
+      .logo-title { font-size: 15px; }
+      .logo-sub { font-size: 9px; letter-spacing: 1.5px; }
+      .gear-ring { width: 68px; height: 68px; }
+      .gear-emoji { font-size: 26px; }
+      .title { font-size: 20px; }
+      .subtitle { font-size: 13px; }
+      .message-box { gap: 9px; padding: 12px 13px; margin-bottom: 20px; }
+      .message-icon { font-size: 17px; }
+      .message-label { font-size: 9.5px; letter-spacing: 1.5px; }
+      .message-text { font-size: 13px; }
+      .progress-label { font-size: 10px; }
+      .status-row { gap: 5px; }
+      .status-pill { font-size: 10.5px; padding: 5px 10px; }
+      .bypass-btn { font-size: 12.5px; padding: 13px 20px; }
+    }
+
+    /* ═══════════════════════════════════════════════
+       RESPONSIVE — MOBILE MUITO PEQUENO (≤ 320px)
+    ═══════════════════════════════════════════════ */
+    @media (max-width: 320px) {
+      .card { padding: 20px 14px; }
+      .logo-wrap { flex-direction: column; align-items: center; text-align: center; }
+      .logo-text { text-align: center; }
+      .title { font-size: 18px; }
+      .status-pill { font-size: 10px; padding: 4px 9px; }
+    }
+
+    /* ── Landscape mobile ────────────────────────── */
+    @media (max-height: 600px) and (orientation: landscape) {
+      .page {
+        justify-content: flex-start;
+        padding-top: 20px;
+      }
+      .gear-wrap { margin-bottom: 12px; }
+      .gear-ring { width: 60px; height: 60px; }
+      .gear-emoji { font-size: 24px; }
+      .logo-wrap { margin-bottom: 16px; }
+      .title { font-size: 20px; margin-bottom: 6px; }
+      .subtitle { margin-bottom: 14px; }
+      .message-box { margin-bottom: 14px; }
+      .divider { margin-bottom: 14px; }
+      .progress-wrap { margin-bottom: 12px; }
+      .status-row { margin-bottom: 12px; }
+      .footer { margin-top: 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-gradient"></div>
+<div class="bg-grid"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<div class="page">
+  <div class="card">
+
+    <!-- Logo -->
+    <div class="logo-wrap">
+      <div class="logo-icon">🎓</div>
+      <div class="logo-text">
+        <div class="logo-title">Super Escola</div>
+        <div class="logo-sub">SIGA — Sistema de Gestão</div>
+      </div>
+    </div>
+
+    <!-- Gear icon -->
+    <div class="gear-wrap">
+      <div class="gear-ring">
+        <span class="gear-emoji">⚙️</span>
+      </div>
+    </div>
+
+    <!-- Title -->
+    <h1 class="title">Sistema em Manutenção</h1>
+    <p class="subtitle" id="subtitle-text">
+      Estamos a realizar melhorias para lhe oferecer uma experiência ainda melhor.
+    </p>
+
+    <!-- Message -->
+    <div class="message-box" id="message-box">
+      <span class="message-icon">🛠️</span>
+      <div class="message-content">
+        <div class="message-label">Actividade em curso</div>
+        <div class="message-text" id="message-text">A carregar informação…</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Progress -->
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span>A trabalhar</span>
+        <span id="timer-label">—</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill"></div>
+      </div>
+    </div>
+
+    <!-- Status pills -->
+    <div class="status-row">
+      <div class="status-pill">
+        <div class="pill-dot green"></div>
+        Servidores online
+      </div>
+      <div class="status-pill">
+        <div class="pill-dot"></div>
+        Dados seguros
+      </div>
+      <div class="status-pill">
+        <div class="pill-dot"></div>
+        Em actualização
+      </div>
+    </div>
+
+    <!-- Timer -->
+    <div class="timer-row" id="timer-row" style="display:none;">
+      <span class="timer-icon">⏱️</span>
+      <span id="elapsed-text">—</span>
+    </div>
+
+    <!-- Admin bypass -->
+    <div class="admin-bypass" id="admin-bypass">
+      <button class="bypass-btn" onclick="entrarComoAdmin()">
+        🔐 Entrar como Administrador
+      </button>
+      <div class="bypass-note">Sessão de administrador detectada</div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-logo">Queta Tech, Lda.</div>
+    <div class="footer-copy">© 2025 Super Escola · Todos os direitos reservados</div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // ── Carregar info de manutenção ──────────────────────
+  fetch('/api/manutencao-status')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data && data.message) {
+        document.getElementById('message-text').textContent = data.message;
+      }
+      if (data && data.activatedAt) {
+        startTimer(new Date(data.activatedAt));
+      }
+    })
+    .catch(function() {
+      document.getElementById('message-text').textContent =
+        'Parametrização e actualização do sistema em curso.';
+    });
+
+  // ── Verificar JWT para bypass de admin ───────────────
+  function getStoredJwt() {
+    try {
+      var raw = localStorage.getItem('siga_auth') ||
+                localStorage.getItem('@siga_auth') ||
+                localStorage.getItem('token') ||
+                localStorage.getItem('jwt');
+      if (!raw) return null;
+      try { var obj = JSON.parse(raw); return obj && (obj.token || obj.accessToken || obj.jwt); }
+      catch(_) { return raw; }
+    } catch(_) { return null; }
+  }
+
+  var jwt = getStoredJwt();
+  if (jwt) {
+    fetch('/api/manutencao/check-bypass', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwt }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d && d.allowed) {
+        document.getElementById('admin-bypass').classList.add('visible');
+      }
+    })
+    .catch(function() {});
+  }
+
+  // ── Admin bypass click ───────────────────────────────
+  window.entrarComoAdmin = function() {
+    var j = getStoredJwt();
+    if (!j) return;
+    fetch('/api/manutencao/bypass', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + j }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d && d.ok) { window.location.href = '/'; }
+    })
+    .catch(function() { alert('Não foi possível fazer bypass. Verifica as credenciais.'); });
+  };
+
+  // ── Timer ────────────────────────────────────────────
+  function startTimer(since) {
+    var timerRow = document.getElementById('timer-row');
+    var timerLabel = document.getElementById('timer-label');
+    var elapsed = document.getElementById('elapsed-text');
+    timerRow.style.display = 'flex';
+
+    function tick() {
+      var diff = Math.floor((Date.now() - since.getTime()) / 1000);
+      var h = Math.floor(diff / 3600);
+      var m = Math.floor((diff % 3600) / 60);
+      var s = diff % 60;
+      var str = '';
+      if (h > 0) str += h + 'h ';
+      str += (m < 10 ? '0' : '') + m + 'm ' + (s < 10 ? '0' : '') + s + 's';
+      elapsed.textContent = 'Em manutenção há ' + str;
+      timerLabel.textContent = str;
+    }
+    tick();
+    setInterval(tick, 1000);
+  }
+
+  // ── Auto-refresh a cada 30 s para voltar quando terminar ─
+  setInterval(function() {
+    fetch('/api/manutencao-status')
+      .then(function(r) { return r.json(); })
+      .then(function(d) { if (d && !d.active) { window.location.reload(); } })
+      .catch(function() {});
+  }, 30000);
+})();
+</script>
+
+</body>
+</html>

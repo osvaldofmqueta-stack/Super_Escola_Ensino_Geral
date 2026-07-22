@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pré-visualização de Emails — Super Escola</title>
+  <style>
+    body { margin: 0; padding: 20px; background: #1a1a2e; font-family: Arial, sans-serif; }
+    h2 { color: #C89A2A; text-align: center; margin-bottom: 30px; }
+    .tabs { display: flex; gap: 12px; justify-content: center; margin-bottom: 30px; }
+    .tab { padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; border: 2px solid transparent; }
+    .tab.active { background: #1A5276; color: #fff; border-color: #2980B9; }
+    .tab:not(.active) { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.6); }
+    .email-wrap { display: none; }
+    .email-wrap.active { display: block; }
+  </style>
+</head>
+<body>
+  <h2>📧 Pré-visualização dos Emails — Super Escola</h2>
+  <div class="tabs">
+    <div class="tab active" onclick="show('reset')">🔐 Redefinição de Senha</div>
+    <div class="tab" onclick="show('guardian')">👨‍👩‍👧 Alerta ao Encarregado</div>
+  </div>
+
+  <!-- Email 1: Reset de Senha -->
+  <div class="email-wrap active" id="reset">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#0D1F35;padding:40px 20px;">
+      <tr>
+        <td align="center">
+          <table width="560" cellpadding="0" cellspacing="0" style="background:#0F2347;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);">
+            <tr>
+              <td style="background:linear-gradient(135deg,#1A5276,#2980B9);padding:32px 40px;text-align:center;">
+                <div style="display:inline-block;background:rgba(240,165,0,0.15);border:2px solid rgba(240,165,0,0.4);border-radius:50%;width:64px;height:64px;line-height:64px;text-align:center;margin-bottom:16px;">
+                  <span style="font-size:28px;">🔐</span>
+                </div>
+                <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:0.5px;">Redefinição de Senha</h1>
+                <p style="margin:8px 0 0;color:rgba(255,255,255,0.75);font-size:13px;">Super Escola</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:36px 40px;">
+                <p style="margin:0 0 16px;color:rgba(255,255,255,0.9);font-size:15px;line-height:1.6;">
+                  Olá, <strong style="color:#C89A2A;">António</strong>,
+                </p>
+                <p style="margin:0 0 24px;color:rgba(255,255,255,0.75);font-size:14px;line-height:1.7;">
+                  Recebemos um pedido para redefinir a senha da sua conta na Super Escola. Se não foi você, pode ignorar este email em segurança — a sua senha permanecerá inalterada.
+                </p>
+                <table width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td align="center" style="padding:8px 0 32px;">
+                      <a href="#" style="display:inline-block;background:linear-gradient(135deg,#1A5276,#2980B9);color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:10px;font-size:15px;font-weight:700;letter-spacing:0.3px;border:1px solid rgba(255,255,255,0.15);">
+                        Redefinir a minha senha
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+                <table width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="background:rgba(240,165,0,0.08);border:1px solid rgba(240,165,0,0.25);border-radius:10px;padding:16px 20px;">
+                      <p style="margin:0;color:rgba(255,255,255,0.7);font-size:13px;line-height:1.6;">
+                        ⏰ <strong style="color:#C89A2A;">Este link é válido apenas por 1 hora.</strong><br />
+                        Após esse prazo, terá de solicitar um novo link de redefinição.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+                <p style="margin:28px 0 0;color:rgba(255,255,255,0.45);font-size:12px;line-height:1.6;">
+                  Se o botão não funcionar, copie e cole este endereço no seu navegador:<br />
+                  <span style="color:#3498DB;">https://sigaschool.ao/reset-senha?token=abc123...</span>
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="background:rgba(0,0,0,0.2);padding:20px 40px;text-align:center;border-top:1px solid rgba(255,255,255,0.06);">
+                <p style="margin:0;color:rgba(255,255,255,0.3);font-size:11px;line-height:1.6;">
+                  Este email foi enviado automaticamente pela Super Escola.<br />
+                  Por favor, não responda a este email.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Email 2: Alerta ao Encarregado -->
+  <div class="email-wrap" id="guardian">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#0D1F35;padding:40px 20px;">
+      <tr>
+        <td align="center">
+          <table width="560" cellpadding="0" cellspacing="0" style="background:#0F2347;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);">
+            <tr>
+              <td style="background:linear-gradient(135deg,#E67E22,#0D1F35);padding:32px 40px;text-align:center;">
+                <div style="display:inline-block;background:rgba(240,165,0,0.15);border:2px solid rgba(240,165,0,0.4);border-radius:50%;width:64px;height:64px;line-height:64px;text-align:center;margin-bottom:16px;">
+                  <span style="font-size:28px;">⚠️</span>
+                </div>
+                <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:700;letter-spacing:0.5px;">Registo de Falta</h1>
+                <p style="margin:8px 0 0;color:rgba(255,255,255,0.65);font-size:13px;">Portal do Encarregado — Super Escola</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:36px 40px;">
+                <p style="margin:0 0 16px;color:rgba(255,255,255,0.9);font-size:15px;line-height:1.6;">
+                  Olá, <strong style="color:#C89A2A;">Maria</strong>,
+                </p>
+                <p style="margin:0 0 8px;color:rgba(255,255,255,0.6);font-size:13px;">Educando: <strong style="color:#C89A2A;">João Silva</strong></p>
+                <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;">
+                  <tr>
+                    <td style="background:rgba(255,255,255,0.04);border-left:4px solid #E67E22;border-radius:0 10px 10px 0;padding:16px 20px;">
+                      <p style="margin:0;color:rgba(255,255,255,0.85);font-size:14px;line-height:1.7;">O seu educando João Silva registou uma falta na disciplina de Matemática no dia 09/04/2026. Total de faltas este mês: 2. Contacte a escola para mais informações.</p>
+                    </td>
+                  </tr>
+                </table>
+                <table width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td align="center" style="padding:8px 0 24px;">
+                      <a href="#" style="display:inline-block;background:linear-gradient(135deg,#E67E22,#2C3E50);color:#ffffff;text-decoration:none;padding:12px 32px;border-radius:10px;font-size:14px;font-weight:700;letter-spacing:0.3px;border:1px solid rgba(255,255,255,0.15);">
+                        Ver no Portal do Encarregado
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+                <p style="margin:16px 0 0;color:rgba(255,255,255,0.35);font-size:11px;line-height:1.6;">
+                  Este email foi enviado automaticamente pela Super Escola. Por favor, não responda a este email.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="background:rgba(0,0,0,0.2);padding:16px 40px;text-align:center;border-top:1px solid rgba(255,255,255,0.06);">
+                <p style="margin:0;color:rgba(255,255,255,0.25);font-size:11px;">Super Escola</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <script>
+    function show(id) {
+      document.querySelectorAll('.email-wrap').forEach(e => e.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      event.target.classList.add('active');
+    }
+  </script>
+</body>
+</html>

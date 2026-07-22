@@ -1,0 +1,51 @@
+-- Migração: colunas em falta na tabela config_geral
+-- Executar em produção: psql $DATABASE_URL -f migrations/add_config_missing_columns.sql
+
+SET search_path = public;
+
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "provincia"              text;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "municipio"              text;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "morada"                 text;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "telefoneEscola"         text;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "emailEscola"            text;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "groqApiKey"             text;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "openaiApiKey"           text;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "empresaNome"            text;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "empresaTelefone"        text;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "empresaEmail"           text;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "empresaLogo"            text;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "empresaWebsite"         text;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "ultimoBackup"           text;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "avaliacaoPeriodoAtivo"  boolean NOT NULL DEFAULT false;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "avaliacaoPeriodoInicio" text;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "avaliacaoPeriodoFim"    text;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "avaliacaoPeriodoLabel"  text;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "exclusaoDuasReprovacoes" boolean NOT NULL DEFAULT false;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "notasVisiveis"          boolean NOT NULL DEFAULT false;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "prazosLancamento"       jsonb;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "periodosHorario"        jsonb;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "tiposProvaCustom"       jsonb NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "maxDeficienciasAprovacao" integer NOT NULL DEFAULT 0;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "loginAprovacaoAtiva"    boolean NOT NULL DEFAULT false;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "apkVersion"             text;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "apkExternalUrl"         text;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "percMac"                integer NOT NULL DEFAULT 60;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "percPp"                 integer NOT NULL DEFAULT 40;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "percNt"                 integer NOT NULL DEFAULT 30;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "percPt"                 integer NOT NULL DEFAULT 70;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "percPg"                 integer NOT NULL DEFAULT 0;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "percExame"              integer NOT NULL DEFAULT 0;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "provaRecuperacaoHabilitada" boolean NOT NULL DEFAULT false;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "maxDisciplinasPorProfessor" integer NOT NULL DEFAULT 6;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "minTurmasProfessor"     integer NOT NULL DEFAULT 1;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "maxTurmasProfessor"     integer NOT NULL DEFAULT 4;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "mesInicioAnoLetivo"     integer NOT NULL DEFAULT 1;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "emisHabilitado"         boolean NOT NULL DEFAULT false;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "emisAmbiente"           text NOT NULL DEFAULT 'sandbox';
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "emisProvedor"           text;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "emisProvedorCustomCode" text;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "emisEntidadeId"         text;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "emisApiKey"             text;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "emisApiUrl"             text;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "emisPrazoPagamento"     integer NOT NULL DEFAULT 24;
+ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "emisNotificarSMS"       boolean NOT NULL DEFAULT true;

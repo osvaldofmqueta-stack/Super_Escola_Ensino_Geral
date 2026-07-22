@@ -1,0 +1,213 @@
+<div style="font-family:'Segoe UI',Arial,sans-serif;color:#0f172a;max-width:210mm;margin:0 auto;padding:10mm 12mm;background:#fff;position:relative;">
+
+  <!-- ═══ CABEÇALHO INSTITUCIONAL ═══ -->
+  <div style="display:flex;align-items:center;gap:12px;border-bottom:3px solid #b8893d;padding-bottom:10px;margin-bottom:10px;">
+    <div style="flex-shrink:0;width:68px;height:68px;display:flex;align-items:center;justify-content:center;">{{LOGO_HTML}}</div>
+    <div style="flex:1;text-align:center;">
+      <div style="font-size:8.5px;text-transform:uppercase;color:#475569;letter-spacing:1.5px;font-weight:600;">República de Angola · Ministério da Educação · Ensino Geral</div>
+      <div style="font-size:15px;font-weight:800;color:#0d1f35;text-transform:uppercase;margin:2px 0;letter-spacing:0.5px;">{{NOME_ESCOLA}}</div>
+      <div style="font-size:8.5px;color:#64748b;">{{LINHA_CONTACTO_ESCOLA}}</div>
+    </div>
+    <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:4px;">{{BADGE_EMISSAO}}</div>
+  </div>
+
+  <!-- ═══ TÍTULO DO DOCUMENTO ═══ -->
+  <div style="background:linear-gradient(90deg,#0d1f35 0%,#1e3a5f 100%);color:#fff;text-align:center;padding:9px 16px;border-radius:6px;margin-bottom:10px;position:relative;">
+    <div style="position:absolute;left:0;top:0;bottom:0;width:5px;background:#b8893d;border-radius:6px 0 0 6px;"></div>
+    <div style="font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;">FICHA DE RECONFIRMAÇÃO DE MATRÍCULA</div>
+    <div style="font-size:9.5px;color:#94a3b8;margin-top:2px;letter-spacing:1px;">ANO LECTIVO {{ANO_LECTIVO}} &nbsp;·&nbsp; Emissão Nº <strong style="color:#fbbf24;">{{NUMERO_EMISSAO}}</strong></div>
+  </div>
+
+  <!-- ═══ IDENTIFICAÇÃO DO ALUNO ═══ -->
+  <div style="display:flex;gap:12px;background:linear-gradient(180deg,#fafbfc 0%,#f1f5f9 100%);border:1px solid #cbd5e1;border-left:4px solid #b8893d;border-radius:8px;padding:12px;margin-bottom:10px;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0;">
+      <div style="width:96px;height:120px;border-radius:6px;background:{{AVATAR_BG}};color:#fff;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:700;border:3px solid #fff;box-shadow:0 0 0 1px #cbd5e1,0 2px 6px rgba(0,0,0,0.1);overflow:hidden;">{{AVATAR_HTML}}</div>
+      <div style="background:#0d1f35;color:#fff;font-size:8px;padding:2px 7px;border-radius:3px;font-weight:600;text-align:center;white-space:nowrap;letter-spacing:0.3px;">{{DATA_NASCIMENTO}}</div>
+    </div>
+    <div style="flex:1;min-width:0;">
+      <div style="font-size:15px;font-weight:800;color:#0d1f35;margin-bottom:2px;">{{NOME_COMPLETO}}</div>
+      <div style="font-size:10px;color:#64748b;margin-bottom:8px;">Nº Matrícula: <strong style="font-family:monospace;background:#fef9f0;padding:1px 7px;border-radius:3px;border:1px solid #f0d99c;color:#0d1f35;">{{NUMERO_MATRICULA}}</strong></div>
+      <div style="font-size:9px;color:#64748b;margin-bottom:8px;">Emissão Nº: <strong style="font-family:monospace;background:#fef9f0;padding:1px 7px;border-radius:3px;border:1px solid #f0d99c;color:#0d1f35;">{{NUMERO_EMISSAO}}</strong></div>
+      <table style="width:100%;border-collapse:collapse;font-size:10px;">
+        <tr>
+          <td style="padding:3px 8px 3px 0;color:#64748b;font-weight:600;width:26%;">Data de Nascimento</td>
+          <td style="padding:3px 10px 3px 0;border-bottom:1px dotted #e2e8f0;">{{DATA_NASCIMENTO}} ({{IDADE}} anos)</td>
+          <td style="padding:3px 8px 3px 0;color:#64748b;font-weight:600;width:18%;">Género</td>
+          <td style="padding:3px 0;border-bottom:1px dotted #e2e8f0;">{{GENERO}}</td>
+        </tr>
+        <tr>
+          <td style="padding:3px 8px 3px 0;color:#64748b;font-weight:600;">Província</td>
+          <td style="padding:3px 10px 3px 0;border-bottom:1px dotted #e2e8f0;">{{PROVINCIA}}</td>
+          <td style="padding:3px 8px 3px 0;color:#64748b;font-weight:600;">Município</td>
+          <td style="padding:3px 0;border-bottom:1px dotted #e2e8f0;">{{MUNICIPIO}}</td>
+        </tr>
+        <tr>
+          <td style="padding:3px 8px 3px 0;color:#64748b;font-weight:600;">Nº BI / Cédula</td>
+          <td style="padding:3px 10px 3px 0;border-bottom:1px dotted #e2e8f0;">{{BI}}</td>
+          <td style="padding:3px 8px 3px 0;color:#64748b;font-weight:600;">Situação</td>
+          <td style="padding:3px 0;border-bottom:1px dotted #e2e8f0;font-weight:700;color:{{SITUACAO_COR}};">{{SITUACAO}}</td>
+        </tr>
+        <tr>
+          <td style="padding:3px 8px 3px 0;color:#64748b;font-weight:600;">Nome do Pai</td>
+          <td style="padding:3px 10px 3px 0;">{{NOME_PAI}}</td>
+          <td style="padding:3px 8px 3px 0;color:#64748b;font-weight:600;">Nome da Mãe</td>
+          <td style="padding:3px 0;">{{NOME_MAE}}</td>
+        </tr>
+      </table>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;justify-content:center;">
+      {{BARCODE_IMG}}
+      <div style="font-size:7.5px;color:#64748b;font-family:monospace;text-align:center;">{{NUMERO_MATRICULA}}</div>
+    </div>
+  </div>
+
+  <!-- ═══ DADOS ACADÉMICOS + ENCARREGADO ═══ -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+    <div>
+      <div style="font-size:10.5px;font-weight:bold;background:#0f172a;color:#fff;padding:5px 10px;border-radius:4px;margin-bottom:6px;letter-spacing:0.5px;">DADOS ACADÉMICOS</div>
+      <table style="width:100%;border-collapse:collapse;font-size:10px;">
+        <tr><td style="padding:3px 6px 3px 0;color:#64748b;font-weight:600;width:42%;">Classe Actual</td><td style="padding:3px 0;border-bottom:1px dotted #e2e8f0;font-weight:700;color:#0d1f35;">{{CLASSE}}</td></tr>
+        <tr><td style="padding:3px 6px 3px 0;color:#64748b;font-weight:600;">Turma</td><td style="padding:3px 0;border-bottom:1px dotted #e2e8f0;">{{TURMA}}</td></tr>
+        <tr><td style="padding:3px 6px 3px 0;color:#64748b;font-weight:600;">Turno</td><td style="padding:3px 0;border-bottom:1px dotted #e2e8f0;">{{TURNO}}</td></tr>
+        <tr><td style="padding:3px 6px 3px 0;color:#64748b;font-weight:600;">Nível</td><td style="padding:3px 0;border-bottom:1px dotted #e2e8f0;">{{NIVEL}}</td></tr>
+        <tr><td style="padding:3px 6px 3px 0;color:#64748b;font-weight:600;">Sala</td><td style="padding:3px 0;border-bottom:1px dotted #e2e8f0;">{{SALA}}</td></tr>
+        <tr><td style="padding:3px 6px 3px 0;color:#64748b;font-weight:600;">Curso / Área</td><td style="padding:3px 0;border-bottom:1px dotted #e2e8f0;">{{CURSO}}</td></tr>
+        <tr><td style="padding:3px 6px 3px 0;color:#64748b;font-weight:600;">Data de Matrícula</td><td style="padding:3px 0;">{{DATA_MATRICULA}}</td></tr>
+      </table>
+    </div>
+    <div>
+      <div style="font-size:10.5px;font-weight:bold;background:#0f172a;color:#fff;padding:5px 10px;border-radius:4px;margin-bottom:6px;letter-spacing:0.5px;">ENCARREGADO DE EDUCAÇÃO</div>
+      <table style="width:100%;border-collapse:collapse;font-size:10px;">
+        <tr><td style="padding:3px 6px 3px 0;color:#64748b;font-weight:600;width:38%;">Nome</td><td style="padding:3px 0;border-bottom:1px dotted #e2e8f0;font-weight:600;color:#0d1f35;">{{ENCARREGADO_NOME}}</td></tr>
+        <tr><td style="padding:3px 6px 3px 0;color:#64748b;font-weight:600;">Telefone</td><td style="padding:3px 0;border-bottom:1px dotted #e2e8f0;">{{ENCARREGADO_TELEFONE}}</td></tr>
+        <tr><td style="padding:3px 6px 3px 0;color:#64748b;font-weight:600;">Email</td><td style="padding:3px 0;border-bottom:1px dotted #e2e8f0;">{{ENCARREGADO_EMAIL}}</td></tr>
+        <tr><td style="padding:3px 6px 3px 0;color:#64748b;font-weight:600;">Profissão</td><td style="padding:3px 0;border-bottom:1px dotted #e2e8f0;">{{ENCARREGADO_PROFISSAO}}</td></tr>
+        <tr><td style="padding:3px 6px 3px 0;color:#64748b;font-weight:600;">Local de Trabalho</td><td style="padding:3px 0;border-bottom:1px dotted #e2e8f0;">{{ENCARREGADO_LOCAL_TRABALHO}}</td></tr>
+        <tr><td style="padding:3px 6px 3px 0;color:#64748b;font-weight:600;">Residência</td><td style="padding:3px 0;">{{ENCARREGADO_RESIDENCIA}}</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ NOTAS DO ANO LECTIVO ═══ -->
+  <div style="font-size:10.5px;font-weight:bold;background:#0f172a;color:#fff;padding:5px 10px;border-radius:4px;margin:0 0 6px;letter-spacing:0.5px;">NOTAS DO ANO LECTIVO {{ANO_LECTIVO}}</div>
+  {{TABELA_NOTAS_FICHA}}
+
+  <!-- ═══ ASSIDUIDADE + SITUAÇÃO FINANCEIRA ═══ -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0;">
+    <div>
+      <div style="font-size:10.5px;font-weight:bold;background:#0f172a;color:#fff;padding:5px 10px;border-radius:4px;margin-bottom:6px;letter-spacing:0.5px;">{{ASSIDUIDADE_TITULO}}</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;">
+        <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:6px;text-align:center;">
+          <div style="font-size:7.5px;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px;">Presenças</div>
+          <div style="font-size:16px;font-weight:bold;color:#16a34a;">{{ASSIDUIDADE_PRESENCAS}}</div>
+        </div>
+        <div style="background:#fefce8;border:1px solid #fde047;border-radius:6px;padding:6px;text-align:center;">
+          <div style="font-size:7.5px;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px;">Faltas J.</div>
+          <div style="font-size:16px;font-weight:bold;color:#a16207;">{{ASSIDUIDADE_FALTAS_J}}</div>
+        </div>
+        <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:6px;text-align:center;">
+          <div style="font-size:7.5px;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px;">Faltas I.</div>
+          <div style="font-size:16px;font-weight:bold;color:#dc2626;">{{ASSIDUIDADE_FALTAS_I}}</div>
+        </div>
+        <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;padding:6px;text-align:center;">
+          <div style="font-size:7.5px;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px;">Assiduidade</div>
+          <div style="font-size:14px;font-weight:bold;color:#0f172a;">{{ASSIDUIDADE_PERCENT}}</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:10.5px;font-weight:bold;background:#0f172a;color:#fff;padding:5px 10px;border-radius:4px;margin-bottom:6px;letter-spacing:0.5px;">{{FINANCEIRO_TITULO}}</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:4px;">
+        <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:6px;text-align:center;">
+          <div style="font-size:7.5px;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px;">Pagamentos</div>
+          <div style="font-size:15px;font-weight:bold;color:#16a34a;">{{FIN_PAGAMENTOS}}</div>
+        </div>
+        <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:6px;text-align:center;">
+          <div style="font-size:7.5px;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px;">Pendências</div>
+          <div style="font-size:15px;font-weight:bold;color:#dc2626;">{{FIN_PENDENCIAS}}</div>
+        </div>
+        <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;padding:6px;text-align:center;">
+          <div style="font-size:7.5px;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px;">Estado</div>
+          <div style="font-size:10.5px;font-weight:bold;color:#0f172a;">{{FIN_ESTADO}}</div>
+        </div>
+      </div>
+      <div style="font-size:9px;color:#64748b;padding:2px 4px;">Total Pago: <strong style="color:#0d1f35;">{{FIN_TOTAL_PAGO}}</strong> &nbsp;&middot;&nbsp; Saldo Actual: <strong style="color:#0d1f35;">{{FIN_SALDO}}</strong></div>
+    </div>
+  </div>
+
+  <!-- ═══ DESPACHO DE ACESSO / DECISÃO APROVADO OU REPROVADO ═══ -->
+  <div style="border:2.5px solid {{DECISAO_ACESSO_COR}};border-radius:8px;padding:12px 16px;margin:12px 0;background:{{DECISAO_ACESSO_BG}};display:flex;align-items:center;gap:16px;">
+    <div style="flex-shrink:0;text-align:center;min-width:110px;">
+      <div style="font-size:34px;font-weight:900;color:{{DECISAO_ACESSO_COR}};letter-spacing:2px;line-height:1.1;text-transform:uppercase;">{{DECISAO_ACESSO}}</div>
+      <div style="font-size:8.5px;color:{{DECISAO_ACESSO_COR}};font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:2px;">Decisão de Acesso</div>
+    </div>
+    <div style="flex:1;border-left:2px solid {{DECISAO_ACESSO_COR}};padding-left:14px;">
+      <div style="font-size:11.5px;font-weight:700;color:#0d1f35;margin-bottom:5px;">DESPACHO DE RECONFIRMAÇÃO DE MATRÍCULA</div>
+      <table style="width:100%;font-size:10px;border-collapse:collapse;">
+        <tr>
+          <td style="padding:2px 8px 2px 0;color:#475569;font-weight:600;width:36%;">Classe Actual:</td>
+          <td style="padding:2px 12px 2px 0;font-weight:700;color:#0d1f35;">{{CLASSE}}</td>
+          <td style="padding:2px 8px 2px 0;color:#475569;font-weight:600;width:28%;">Ano Lectivo:</td>
+          <td style="padding:2px 0;font-weight:700;color:#0d1f35;">{{ANO_LECTIVO}}</td>
+        </tr>
+        <tr>
+          <td style="padding:2px 8px 2px 0;color:#475569;font-weight:600;">Classe Seguinte:</td>
+          <td style="padding:2px 12px 2px 0;font-weight:700;color:{{DECISAO_ACESSO_COR}};">{{CLASSE_PROXIMA}}</td>
+          <td style="padding:2px 8px 2px 0;color:#475569;font-weight:600;">Ano Seguinte:</td>
+          <td style="padding:2px 0;font-weight:700;color:#0d1f35;">{{ANO_LECTIVO_PROXIMO}}</td>
+        </tr>
+      </table>
+      <div style="margin-top:6px;font-size:9px;color:#475569;font-style:italic;">O(A) aluno(a) acima identificado(a) está <strong style="color:{{DECISAO_ACESSO_COR}};">{{DECISAO_ACESSO}}</strong> para reconfirmar a matrícula no próximo ano lectivo. A decisão baseia-se no aproveitamento académico e situação financeira registados no sistema.</div>
+    </div>
+  </div>
+
+  <!-- ═══ OBSERVAÇÕES / CONDICIONANTES ═══ -->
+  <div style="border:1px dashed #94a3b8;border-radius:6px;padding:8px 12px;margin-bottom:12px;">
+    <div style="font-size:10px;font-weight:700;color:#0d1f35;margin-bottom:5px;">OBSERVAÇÕES / CONDICIONANTES:</div>
+    <div style="font-size:9.5px;color:#475569;line-height:2;">
+      <span style="display:inline-block;margin-right:20px;">&#9744; Propinas vencidas</span>
+      <span style="display:inline-block;margin-right:20px;">&#9744; Documentação incompleta</span>
+      <span style="display:inline-block;margin-right:20px;">&#9744; Matrícula condicional</span>
+      <span style="display:inline-block;">&#9744; Outro:</span>
+    </div>
+    <div style="margin-top:4px;font-size:9px;color:#94a3b8;">Observações adicionais: _____________________________________________________________</div>
+  </div>
+
+  <!-- ═══ QR CODE + VERIFICAÇÃO ═══ -->
+  <div style="border-top:2px dashed #94a3b8;padding-top:10px;margin-top:10px;display:flex;gap:12px;align-items:center;">
+    <div style="flex-shrink:0;">{{QR_VERIFICACAO}}</div>
+    <div style="flex:1;font-size:9px;color:#475569;line-height:1.7;">
+      <strong style="color:#0d1f35;font-size:10px;">Verificação de Autenticidade</strong><br/>
+      Este documento pode ser autenticado em <span style="font-family:monospace;font-size:8.5px;color:#0d1f35;background:#f1f5f9;padding:2px 5px;border-radius:3px;">{{URL_VERIFICACAO}}</span><br/>
+      ou lendo o código QR ao lado.<br/>
+      Hash: <strong style="font-family:monospace;">{{HASH_VERIFICACAO}}</strong> &nbsp;&middot;&nbsp; Emissão Nº <strong>{{NUMERO_EMISSAO}}</strong>
+    </div>
+  </div>
+
+  <!-- ═══ ASSINATURAS ═══ -->
+  <table style="width:100%;border-collapse:collapse;margin-top:22px;">
+    <tr>
+      <td style="text-align:center;padding:0 14px;border:none;width:33%;">
+        <div style="border-top:1px solid #0d1f35;padding-top:5px;margin-top:32px;">
+          <div style="font-size:10.5px;font-weight:700;color:#0d1f35;">{{NOME_SUBDIRECTOR_PEDAGOGICO}}</div>
+          <div style="font-size:8.5px;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;">O(A) Subdirector(a) Pedagógico(a)</div>
+        </div>
+      </td>
+      <td style="text-align:center;padding:0 14px;border:none;width:33%;">
+        <div style="border-top:1px solid #0d1f35;padding-top:5px;margin-top:32px;">
+          <div style="font-size:10.5px;font-weight:700;color:#0d1f35;">{{ASSINATURA_ENCARREGADO}}</div>
+          <div style="font-size:8.5px;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;">O(A) Encarregado(a) de Educação</div>
+        </div>
+      </td>
+      <td style="text-align:center;padding:0 14px;border:none;width:33%;">
+        <div style="border-top:1px solid #0d1f35;padding-top:5px;margin-top:32px;">
+          <div style="font-size:10.5px;font-weight:700;color:#0d1f35;">{{ASSINATURA_DIRECTOR_GERAL}}</div>
+          <div style="font-size:8.5px;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;">O(A) Director(a) Geral</div>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <div style="text-align:right;font-size:8.5px;color:#94a3b8;margin-top:10px;font-style:italic;">{{MUNICIPIO}}, {{DATA_EMISSAO}} &nbsp;&middot;&nbsp; {{NOME_ESCOLA}} &nbsp;&middot;&nbsp; Sistema SIGE</div>
+
+</div>

@@ -1,0 +1,13 @@
+diff --git a/node_modules/expo-font/build/ExpoFontLoader.web.js b/node_modules/expo-font/build/ExpoFontLoader.web.js
+index 3926897..bae700f 100644
+--- a/node_modules/expo-font/build/ExpoFontLoader.web.js
++++ b/node_modules/expo-font/build/ExpoFontLoader.web.js
+@@ -139,7 +139,7 @@ const ExpoFontLoader = {
+         return new FontObserver(fontFamilyName, {
+             // @ts-expect-error: TODO(@kitten): Typings indicate that the polyfill may not support this?
+             display: resource.display,
+-        }).load(null, 6000);
++        }).load(null, 6000).catch(() => { /* swallow timeout */ });
+     },
+ };
+ const isServer = process.env.EXPO_OS === 'web' && typeof window === 'undefined';

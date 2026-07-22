@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8"/>
+<title>Lista de Candidatos por Sala de Exame</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:Arial,sans-serif;font-size:11px;color:#000;}
+  .page{padding:14mm 15mm;page-break-after:always;}
+  .page:last-child{page-break-after:avoid;}
+  .header{text-align:center;margin-bottom:10px;}
+  .header img{width:54px;height:auto;display:block;margin:0 auto 4px;}
+  .header p{margin:1px 0;font-size:11px;font-weight:bold;text-transform:uppercase;}
+  .doc-title{text-align:center;font-size:13px;font-weight:bold;text-decoration:underline;margin:8px 0 6px;text-transform:uppercase;letter-spacing:1px;}
+  .sala-info{border:1px solid #000;padding:6px 10px;margin-bottom:8px;display:flex;flex-wrap:wrap;gap:6px 24px;}
+  .sala-info span{white-space:nowrap;font-size:11px;}
+  .sala-badge{display:inline-block;background:#1a2540;color:#fff;font-size:14px;font-weight:bold;padding:3px 14px;border-radius:4px;letter-spacing:1px;}
+  table{border-collapse:collapse;width:100%;font-size:10px;margin-bottom:14px;}
+  th{background:#00BCD4;color:#fff;font-weight:bold;border:1px solid #000;padding:4px 5px;text-align:center;}
+  td{border:1px solid #000;padding:3px 4px;}
+  .tr-alt{background:#FFF9C4;}
+  .stat-wrap{display:flex;gap:20px;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;}
+  .stat-table{border-collapse:collapse;font-size:10px;}
+  .stat-table th,.stat-table td{border:1px solid #000;padding:3px 8px;text-align:center;}
+  .stat-table .h{background:#00BCD4;color:#fff;font-weight:bold;}
+  .instrucoes{border:1px solid #aaa;padding:6px 10px;font-size:10px;line-height:1.5;margin-bottom:12px;}
+  .instrucoes strong{font-size:10px;}
+  .sig-row{display:flex;justify-content:space-between;margin-top:16px;}
+  .sig-block{text-align:center;min-width:150px;}
+  .sig-line{width:140px;border-top:1px solid #000;margin:24px auto 4px;}
+  .curso-tag{display:inline-block;background:#1a2540;color:#fff;font-size:9px;font-weight:bold;padding:2px 8px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+  @media print{
+    .page{padding:10mm 12mm;}
+    @page{size:A4 portrait;margin:0;}
+  }
+</style>
+</head>
+<body>
+{{SALAS_HTML}}
+</body>
+</html>

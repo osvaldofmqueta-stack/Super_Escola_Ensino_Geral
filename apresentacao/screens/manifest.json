@@ -1,0 +1,169 @@
+[
+  {
+    "name": "01-dashboard",
+    "path": "/",
+    "label": "Painel de Controlo",
+    "ok": false
+  },
+  {
+    "name": "02-config",
+    "path": "/admin?section=config&group=sistema",
+    "label": "Configurações Gerais",
+    "file": "/home/runner/workspace/apresentacao/screens/02-config.png",
+    "ok": true
+  },
+  {
+    "name": "03-escola",
+    "path": "/admin?section=escola&group=sistema",
+    "label": "Configuração da Escola",
+    "file": "/home/runner/workspace/apresentacao/screens/03-escola.png",
+    "ok": true
+  },
+  {
+    "name": "04-anos",
+    "path": "/admin?section=anos&group=academico",
+    "label": "Ano Académico",
+    "file": "/home/runner/workspace/apresentacao/screens/04-anos.png",
+    "ok": true
+  },
+  {
+    "name": "05-matriculas",
+    "path": "/admin?section=matriculas&group=academico",
+    "label": "Matrículas Pendentes",
+    "file": "/home/runner/workspace/apresentacao/screens/05-matriculas.png",
+    "ok": true
+  },
+  {
+    "name": "06-cursos",
+    "path": "/admin?section=cursos&group=academico",
+    "label": "Gestão de Cursos",
+    "file": "/home/runner/workspace/apresentacao/screens/06-cursos.png",
+    "ok": true
+  },
+  {
+    "name": "07-disciplinas",
+    "path": "/admin?section=disciplinas&group=academico",
+    "label": "Disciplinas",
+    "file": "/home/runner/workspace/apresentacao/screens/07-disciplinas.png",
+    "ok": true
+  },
+  {
+    "name": "08-reabertura",
+    "path": "/admin?section=reabertura&group=academico",
+    "label": "Reabertura de Notas",
+    "file": "/home/runner/workspace/apresentacao/screens/08-reabertura.png",
+    "ok": true
+  },
+  {
+    "name": "09-avaliacoes",
+    "path": "/admin?section=solicit_avaliacao&group=academico",
+    "label": "Lançamento de Notas",
+    "file": "/home/runner/workspace/apresentacao/screens/09-avaliacoes.png",
+    "ok": true
+  },
+  {
+    "name": "10-usuarios",
+    "path": "/admin?section=usuarios&group=pessoal",
+    "label": "Utilizadores",
+    "file": "/home/runner/workspace/apresentacao/screens/10-usuarios.png",
+    "ok": true
+  },
+  {
+    "name": "11-acessos",
+    "path": "/admin?section=acessos&group=pessoal",
+    "label": "Permissões e Acessos",
+    "file": "/home/runner/workspace/apresentacao/screens/11-acessos.png",
+    "ok": true
+  },
+  {
+    "name": "12-comunicacoes",
+    "path": "/admin?section=comunicacoes&group=sistema",
+    "label": "Comunicações",
+    "file": "/home/runner/workspace/apresentacao/screens/12-comunicacoes.png",
+    "ok": true
+  },
+  {
+    "name": "13-seguranca",
+    "path": "/admin?section=seguranca&group=sistema",
+    "label": "Segurança & Backups",
+    "file": "/home/runner/workspace/apresentacao/screens/13-seguranca.png",
+    "ok": true
+  },
+  {
+    "name": "14-turmas",
+    "path": "/turmas",
+    "label": "Turmas",
+    "file": "/home/runner/workspace/apresentacao/screens/14-turmas.png",
+    "ok": true
+  },
+  {
+    "name": "15-alunos",
+    "path": "/alunos",
+    "label": "Alunos",
+    "file": "/home/runner/workspace/apresentacao/screens/15-alunos.png",
+    "ok": true
+  },
+  {
+    "name": "16-professores",
+    "path": "/professores",
+    "label": "Professores",
+    "file": "/home/runner/workspace/apresentacao/screens/16-professores.png",
+    "ok": true
+  },
+  {
+    "name": "17-notas",
+    "path": "/notas",
+    "label": "Notas",
+    "file": "/home/runner/workspace/apresentacao/screens/17-notas.png",
+    "ok": true
+  },
+  {
+    "name": "18-presencas",
+    "path": "/presencas",
+    "label": "Presenças",
+    "file": "/home/runner/workspace/apresentacao/screens/18-presencas.png",
+    "ok": true
+  },
+  {
+    "name": "19-financeiro",
+    "path": "/financeiro",
+    "label": "Financeiro",
+    "file": "/home/runner/workspace/apresentacao/screens/19-financeiro.png",
+    "ok": true
+  },
+  {
+    "name": "20-relatorios",
+    "path": "/relatorios",
+    "label": "Relatórios",
+    "file": "/home/runner/workspace/apresentacao/screens/20-relatorios.png",
+    "ok": true
+  },
+  {
+    "name": "21-auditoria",
+    "path": "/auditoria",
+    "label": "Auditoria do Sistema",
+    "file": "/home/runner/workspace/apresentacao/screens/21-auditoria.png",
+    "ok": true
+  },
+  {
+    "name": "22-sessoes",
+    "path": "/sessoes-ativas",
+    "label": "Sessões Activas",
+    "file": "/home/runner/workspace/apresentacao/screens/22-sessoes.png",
+    "ok": true
+  },
+  {
+    "name": "23-gestao-academica",
+    "path": "/gestao-academica",
+    "label": "Gestão Académica",
+    "file": "/home/runner/workspace/apresentacao/screens/23-gestao-academica.png",
+    "ok": true
+  },
+  {
+    "name": "24-gestao-acessos",
+    "path": "/gestao-acessos",
+    "label": "Gestão de Acessos",
+    "file": "/home/runner/workspace/apresentacao/screens/24-gestao-acessos.png",
+    "ok": true
+  }
+]

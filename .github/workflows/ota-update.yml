@@ -1,0 +1,77 @@
+name: Publicar OTA Update (EAS)
+
+on:
+  workflow_dispatch:
+    inputs:
+      canal:
+        description: 'Canal de distribuição'
+        required: false
+        default: 'production'
+        type: choice
+        options: [production, preview, development]
+      mensagem:
+        description: 'Mensagem da actualização (opcional)'
+        required: false
+        default: ''
+
+jobs:
+  ota:
+    name: Publicar OTA
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Verificar EXPO_TOKEN
+        run: |
+          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+            echo "❌ EXPO_TOKEN não configurado nos secrets do GitHub."
+            echo ""
+            echo "Para configurar:"
+            echo "  1. Vai a https://expo.dev/accounts/[conta]/settings/access-tokens"
+            echo "  2. Cria um token de acesso"
+            echo "  3. Adiciona em GitHub → Settings → Secrets → Actions → EXPO_TOKEN"
+            exit 1
+          fi
+          echo "✅ EXPO_TOKEN configurado."
+
+      - name: Instalar dependências
+        run: npm install --legacy-peer-deps
+
+      - name: Determinar canal e mensagem
+        id: params
+        run: |
+          CANAL="${{ github.event.inputs.canal }}"
+          [ -z "$CANAL" ] && CANAL="production"
+          MSG="${{ github.event.inputs.mensagem }}"
+          if [ -z "$MSG" ]; then
+            COMMIT_MSG=$(git log -1 --format='%s' | cut -c1-80)
+            MSG="OTA $(date '+%d/%m/%Y') — $COMMIT_MSG"
+          fi
+          echo "canal=$CANAL" >> $GITHUB_OUTPUT
+          echo "mensagem=$MSG" >> $GITHUB_OUTPUT
+          echo "Canal: $CANAL"
+          echo "Mensagem: $MSG"
+
+      - name: Publicar actualização OTA
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          npx eas-cli update \
+            --channel "${{ steps.params.outputs.canal }}" \
+            --message "${{ steps.params.outputs.mensagem }}" \
+            --non-interactive
+
+      - name: Resumo
+        run: |
+          echo "✅ OTA publicado com sucesso!"
+          echo "Canal: ${{ steps.params.outputs.canal }}"
+          echo "Mensagem: ${{ steps.params.outputs.mensagem }}"
+          echo "Os dispositivos vão receber a actualização na próxima abertura da app."

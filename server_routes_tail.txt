@@ -1,0 +1,1000 @@
+          rating TEXT CHECK (rating IN ('up','down')) NOT NULL,
+          criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `);
+    } catch (e) {
+      console.error('[ai-feedback] Erro ao criar tabela:', e);
+    }
+  })();
+
+  app.post('/api/ai-feedback', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { mensagemId, mensagem, resposta, rating } = req.body as {
+        mensagemId?: string; mensagem?: string; resposta?: string; rating?: string;
+      };
+      if (!mensagemId || !rating || !['up', 'down'].includes(rating)) {
+        return res.status(400).json({ error: 'Parâmetros inválidos.' });
+      }
+      const utilizadorId = (req as any).jwtUser?.userId ?? '';
+      await query(
+        `INSERT INTO public.ai_feedback (utilizador_id, mensagem_id, mensagem, resposta, rating)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT DO NOTHING`,
+        [utilizadorId, mensagemId, mensagem ?? '', resposta ?? '', rating]
+      );
+      return res.json({ ok: true });
+    } catch (err) {
+      console.error('[ai-feedback]', err);
+      return res.status(500).json({ error: 'Erro interno.' });
+    }
+  });
+
+  app.get('/api/ai-feedback/stats', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const rows = await query<{ rating: string; total: string }>(`
+        SELECT rating, COUNT(*) AS total
+        FROM public.ai_feedback
+        GROUP BY rating
+      `);
+      const up = rows.find((r) => r.rating === 'up')?.total ?? 0;
+      const down = rows.find((r) => r.rating === 'down')?.total ?? 0;
+      return res.json({ up: Number(up), down: Number(down) });
+    } catch (err) {
+      console.error('[ai-feedback/stats]', err);
+      return res.json({ up: 0, down: 0 });
+    }
+  });
+
+  // ── DIAGNÓSTICO DA BASE DE DADOS ────────────────────────────────────────────
+  app.post('/api/admin/run-migrations', requireAuth, requirePermission('admin'), async (_req: Request, res: Response) => {
+    try {
+      const { runMigrations } = await import('./migrate');
+      const logs: string[] = [];
+      const origLog = console.log.bind(console);
+      const origWarn = console.warn.bind(console);
+      console.log = (...args: any[]) => { origLog(...args); logs.push(args.join(' ')); };
+      console.warn = (...args: any[]) => { origWarn(...args); logs.push('[WARN] ' + args.join(' ')); };
+      try {
+        await runMigrations();
+      } finally {
+        console.log = origLog;
+        console.warn = origWarn;
+      }
+      res.json({ ok: true, logs });
+    } catch (e: any) {
+      res.status(500).json({ ok: false, error: e.message });
+    }
+  });
+
+  app.get('/api/admin/db-diagnostics', requireAuth, requirePermission('admin'), async (req: Request, res: Response) => {
+    try {
+      // 1. Modo da BD activo
+      const { getSyncState } = await import('./db-sync');
+      const syncState = getSyncState();
+
+      // 2. Verificar tabelas esperadas
+      const expectedTables = [
+        'utilizadores','alunos','professores','funcionarios','turmas','turma_disciplinas',
+        'notas','presencas','pagamentos','taxas','config_geral','anos_academicos',
+        'lookup_items','doc_templates','notificacoes','salas','eventos','rupes',
+        'folhas_salarios','ai_conversas','horarios','cursos','disciplinas',
+      ];
+      const tableRows = await query<{ tablename: string }>(
+        `SELECT tablename FROM pg_tables WHERE schemaname='public'`, []
+      );
+      const existingTables = new Set(tableRows.map((r: any) => r.tablename));
+      const tableStatus = expectedTables.map(t => ({ name: t, exists: existingTables.has(t) }));
+
+      // 3. Verificar colunas esperadas em config_geral
+      const expectedCols = [
+        'id','nomeEscola','logoUrl','pp1Habilitado','pptHabilitado','notaMinimaAprovacao',
+        'maxAlunosTurma','numAvaliacoes','macMin','macMax','groqApiKey','openaiApiKey',
+        'percMac','percPp','percNt','percPt','percPg','percExame','provaRecuperacaoHabilitada',
+        'maxDisciplinasPorProfessor','minTurmasProfessor','maxTurmasProfessor','mesInicioAnoLetivo',
+        'empresaNome','empresaTelefone','empresaEmail','empresaLogo','empresaWebsite',
+        'morada','telefoneEscola','emailEscola','licencaNivel','licencaPrecoPorAluno',
+        'licencaSaldoCredito','licencaAutoRenew','licencaGracePeriodDias',
+        'ultimoBackup','avaliacaoPeriodoAtivo','notasVisiveis','prazosLancamento',
+        'periodosHorario','flashScreen','tipoEscala',
+      ];
+      let colStatus: Array<{ name: string; exists: boolean }> = [];
+      if (existingTables.has('config_geral')) {
+        const colRows = await query<{ column_name: string }>(
+          `SELECT column_name FROM information_schema.columns WHERE table_name='config_geral' AND table_schema='public'`, []
+        );
+        const existingCols = new Set(colRows.map((r: any) => r.column_name));
+        colStatus = expectedCols.map(c => ({ name: c, exists: existingCols.has(c) }));
+      }
+
+      // 4. Contar registos em tabelas chave
+      const counts: Record<string, number> = {};
+      for (const t of ['utilizadores','alunos','professores','turmas','notas','pagamentos']) {
+        if (existingTables.has(t)) {
+          try {
+            const r = await query<{ c: string }>(`SELECT COUNT(*) AS c FROM public."${t}"`, []);
+            counts[t] = parseInt(r[0]?.c ?? '0', 10);
+          } catch { counts[t] = -1; }
+        }
+      }
+
+      // 5. Versão do PostgreSQL
+      let pgVersion = 'desconhecida';
+      try {
+        const vr = await query<{ version: string }>(`SELECT version()`, []);
+        pgVersion = String(vr[0]?.version ?? '').split(' ').slice(0, 2).join(' ');
+      } catch { /* ignora */ }
+
+      // 6. Chaves de IA configuradas
+      const aiEnvGroq = !!process.env.GROQ_API_KEY;
+      const aiEnvOpenai = !!process.env.OPENAI_API_KEY;
+      let aiDbGroq = false; let aiDbOpenai = false;
+      if (existingTables.has('config_geral')) {
+        try {
+          const cfgR = await query<{ groqApiKey?: string; openaiApiKey?: string }>(
+            `SELECT "groqApiKey", "openaiApiKey" FROM public.config_geral LIMIT 1`, []
+          );
+          aiDbGroq = !!cfgR[0]?.groqApiKey;
+          aiDbOpenai = !!cfgR[0]?.openaiApiKey;
+        } catch { /* ignora */ }
+      }
+
+      const missingTables = tableStatus.filter(t => !t.exists);
+      const missingCols = colStatus.filter(c => !c.exists);
+      const healthy = missingTables.length === 0 && missingCols.length === 0;
+
+      res.json({
+        healthy,
+        dbMode: syncState.mode,
+        neonAvailable: syncState.neonAvailable,
+        localAvailable: syncState.localAvailable,
+        lastNeonCheck: syncState.lastNeonCheck,
+        lastBackup: syncState.lastBackup,
+        pgVersion,
+        tables: { total: existingTables.size, expected: expectedTables.length, missing: missingTables },
+        columns: { total: colStatus.filter(c => c.exists).length, expected: expectedCols.length, missing: missingCols },
+        counts,
+        ai: { envGroq: aiEnvGroq, envOpenai: aiEnvOpenai, dbGroq: aiDbGroq, dbOpenai: aiDbOpenai },
+        checkedAt: new Date().toISOString(),
+      });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // ─── VERIFICAÇÃO PÚBLICA DE RECIBO (sem autenticação) ───────────────────────
+  app.get('/api/public/verificar-recibo/:ref', async (req: Request, res: Response) => {
+    try {
+      const ref = decodeURIComponent(req.params.ref || '').trim();
+      if (!ref) return res.status(400).json({ error: 'Referência inválida.' });
+
+      const rows = await query<any>(
+        `SELECT p.*, a.nome AS alunoNome, a."numeroMatricula",
+                t.nome AS turmaNome, t.classe,
+                c."nomeEscola", c."nifEscola", c."logoUrl"
+         FROM public.pagamentos p
+         LEFT JOIN public.alunos a ON a.id = p."alunoId"
+         LEFT JOIN public.turmas t ON t.id = a."turmaId"
+         LEFT JOIN public.config_geral c ON TRUE
+         WHERE p."numeroSerie" = $1
+         LIMIT 1`,
+        [ref]
+      );
+
+      if (!rows.length) {
+        return res.status(404).json({ valido: false, mensagem: 'Documento não encontrado na base de dados.' });
+      }
+
+      const p = rows[0];
+      return res.json({
+        valido: true,
+        numeroSerie: p.numeroSerie,
+        escola: p.nomeEscola || 'N/D',
+        nifEscola: p.nifEscola || '',
+        aluno: p.alunoNome || 'N/D',
+        matricula: p.numeroMatricula || 'N/D',
+        turma: p.turmaNome || 'N/D',
+        classe: p.classe ? `${p.classe}ª Classe` : 'N/D',
+        valor: Number(p.valor || 0),
+        data: p.data || p.dataPagamento || p.createdAt,
+        status: p.status,
+        metodoPagamento: p.metodoPagamento || '',
+        referencia: p.referencia || '',
+        descricao: p.descricao || '',
+        hashDoc: (p.hashDoc || '').slice(0, 16),
+        logoUrl: p.logoUrl || '',
+      });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  app.get('/verificar-recibo/:ref', async (req: Request, res: Response) => {
+    const ref = decodeURIComponent(req.params.ref || '').trim();
+    const apiUrl = `/api/public/verificar-recibo/${encodeURIComponent(ref)}`;
+
+    const html = `<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Verificação de Recibo · Super Escola SIGA</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;background:#0a1828;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+  .card{background:#fff;border-radius:16px;width:100%;max-width:520px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+  .header{background:linear-gradient(135deg,#0a1828 0%,#1e3a5f 100%);padding:28px 28px 20px;text-align:center;color:#fff}
+  .header .badge{display:inline-flex;align-items:center;gap:6px;background:rgba(212,175,55,.15);border:1px solid rgba(212,175,55,.35);border-radius:99px;padding:4px 14px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#d4af37;margin-bottom:14px}
+  .header h1{font-size:18px;font-weight:700;letter-spacing:.5px}
+  .header p{font-size:12px;color:rgba(255,255,255,.55);margin-top:4px}
+  .body{padding:28px}
+  .status-row{display:flex;align-items:center;justify-content:center;gap:10px;padding:14px;border-radius:10px;margin-bottom:20px;font-weight:700;font-size:15px}
+  .status-pago{background:#f0fdf4;color:#16a34a;border:1.5px solid #bbf7d0}
+  .status-pendente{background:#fffbeb;color:#d97706;border:1.5px solid #fde68a}
+  .status-error{background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca}
+  .status-loading{background:#f0f9ff;color:#0369a1;border:1.5px solid #bae6fd}
+  .field{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid #f1f5f9;gap:12px}
+  .field:last-child{border-bottom:none}
+  .field label{font-size:11.5px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;flex-shrink:0}
+  .field span{font-size:13px;font-weight:600;color:#1e293b;text-align:right}
+  .valor{font-size:22px!important;color:#0a1828!important;font-weight:800!important}
+  .ref{font-family:monospace;font-size:12px!important;color:#1e6fd9!important;background:#eff6ff;padding:2px 6px;border-radius:4px}
+  .hash{font-family:monospace;font-size:11px!important;color:#64748b!important}
+  .footer{background:#f8fafc;padding:14px 28px;text-align:center;font-size:11px;color:#94a3b8;border-top:1px solid #e2e8f0}
+  .spinner{width:20px;height:20px;border:2.5px solid #bae6fd;border-top-color:#0369a1;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .icon{font-size:20px}
+  .escola-logo{width:48px;height:48px;border-radius:8px;object-fit:contain;background:#fff;border:1px solid rgba(255,255,255,.15);padding:3px;margin-bottom:10px}
+  @media(prefers-color-scheme:dark){body{background:#060e18}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <div class="badge">🔒 Verificação Oficial</div>
+    <h1>Super Escola · SIGA</h1>
+    <p>Sistema Integrado de Gestão Académica</p>
+  </div>
+  <div class="body">
+    <div class="status-row status-loading" id="statusRow">
+      <span class="spinner"></span>&nbsp;A verificar documento…
+    </div>
+    <div id="fields"></div>
+  </div>
+  <div class="footer" id="footer">Verificado em ${new Date().toLocaleString('pt-PT', { timeZone: 'Africa/Luanda' })} · Super Escola SIGA v3</div>
+</div>
+<script>
+(function(){
+  var ref = ${JSON.stringify(ref)};
+  var apiUrl = ${JSON.stringify(apiUrl)};
+  var MESES = ['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  function fmtDate(d){
+    if(!d) return 'N/D';
+    var dt = new Date(d);
+    if(isNaN(dt)) return d;
+    return dt.getDate().toString().padStart(2,'0')+'/'+MESES[dt.getMonth()+1]+'/'+dt.getFullYear();
+  }
+  function fmtMoney(v){
+    return Number(v||0).toLocaleString('pt-AO',{minimumFractionDigits:2,maximumFractionDigits:2})+' Kz';
+  }
+  function field(label, value, cls){
+    return '<div class="field"><label>'+label+'</label><span class="'+(cls||'')+'">'+value+'</span></div>';
+  }
+  fetch(apiUrl)
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var sr = document.getElementById('statusRow');
+      var fi = document.getElementById('fields');
+      if(!d.valido){
+        sr.className='status-row status-error';
+        sr.innerHTML='<span class="icon">❌</span> Documento não encontrado';
+        fi.innerHTML='<p style="text-align:center;color:#94a3b8;font-size:13px;padding:12px 0">A referência <strong>'+ref+'</strong> não existe na base de dados desta escola.</p>';
+        return;
+      }
+      var statusOk = d.status==='pago';
+      sr.className='status-row '+(statusOk?'status-pago':'status-pendente');
+      sr.innerHTML=(statusOk?'<span class="icon">✅</span> PAGAMENTO CONFIRMADO':'<span class="icon">⏳</span> PAGAMENTO PENDENTE');
+      var html='';
+      if(d.escola) html+=field('Escola',d.escola);
+      if(d.nifEscola) html+=field('NIF Escola',d.nifEscola);
+      html+=field('Referência','<span class="ref">'+d.numeroSerie+'</span>');
+      html+=field('Aluno',d.aluno);
+      if(d.matricula && d.matricula!=='N/D') html+=field('Matrícula',d.matricula);
+      html+=field('Turma',d.turma+(d.classe&&d.classe!=='N/D'?' · '+d.classe:''));
+      html+=field('Valor Total','<span class="valor">'+fmtMoney(d.valor)+'</span>');
+      if(d.data) html+=field('Data Pagamento',fmtDate(d.data));
+      if(d.referencia) html+=field('Ref. RUPE','<span class="ref">'+d.referencia+'</span>');
+      if(d.hashDoc) html+=field('Hash','<span class="hash">'+d.hashDoc+'…</span>');
+      fi.innerHTML=html;
+    })
+    .catch(function(){
+      var sr = document.getElementById('statusRow');
+      sr.className='status-row status-error';
+      sr.innerHTML='<span class="icon">⚠️</span> Erro ao verificar. Tente novamente.';
+    });
+})();
+</script>
+</body>
+</html>`;
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-store');
+    res.send(html);
+  });
+
+  // ─── PERFIS PENDENTES ────────────────────────────────────────────────────────
+
+  // GET /api/minha-conta/dados-em-falta — campos pessoais em falta para o utilizador logado (pós-primeiro-acesso)
+  app.get('/api/minha-conta/dados-em-falta', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).jwtUser ?? (req as any).user;
+      const role = user?.role ?? '';
+      const userId = user?.userId ?? user?.id ?? '';
+
+      const camposEmFalta: string[] = [];
+      let dadosAtuais: Record<string, any> = {};
+
+      if (role === 'aluno') {
+        const aRows = await query<JsonObject>(
+          `SELECT "numeroBi", "dataNascimento", genero, "nomeEncarregado", "telefoneEncarregado"
+           FROM public.alunos WHERE "utilizadorId" = $1 AND ativo = true LIMIT 1`,
+          [userId]
+        );
+        const a = aRows[0] ?? {};
+        if (!a.dataNascimento) camposEmFalta.push('dataNascimento');
+        if (!a.genero) camposEmFalta.push('genero');
+        if (!a.numeroBi) camposEmFalta.push('bi');
+        if (!a.nomeEncarregado) camposEmFalta.push('encarregadoNome');
+        if (!a.telefoneEncarregado) camposEmFalta.push('encarregadoTelefone');
+        dadosAtuais = {
+          bi: a.numeroBi ?? '',
+          dataNascimento: a.dataNascimento ?? '', genero: a.genero ?? '',
+          encarregadoNome: a.nomeEncarregado ?? '',
+          encarregadoTelefone: a.telefoneEncarregado ?? '',
+        };
+      } else {
+        const uRows = await query<JsonObject>(
+          `SELECT telefone, "dataNascimento", genero FROM public.utilizadores WHERE id = $1 LIMIT 1`,
+          [userId]
+        );
+        const u = uRows[0] ?? {};
+        if (!u.telefone) camposEmFalta.push('telefone');
+        if (!u.dataNascimento) camposEmFalta.push('dataNascimento');
+        if (!u.genero) camposEmFalta.push('genero');
+        dadosAtuais = {
+          telefone: u.telefone ?? '',
+          dataNascimento: u.dataNascimento ?? '',
+          genero: u.genero ?? '',
+        };
+      }
+
+      json(res, 200, { temDadosEmFalta: camposEmFalta.length > 0, campos: camposEmFalta, role, dadosAtuais });
+    } catch (e) {
+      json(res, 500, { error: (e as Error).message });
+    }
+  });
+
+  // POST /api/minha-conta/completar-perfil — utilizador preenche os seus dados pessoais em falta
+  app.post('/api/minha-conta/completar-perfil', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).jwtUser ?? (req as any).user;
+      const role = user?.role ?? '';
+      const userId = user?.userId ?? user?.id ?? '';
+      const b = req.body as Record<string, any>;
+
+      if (role === 'aluno') {
+        const fields: string[] = [];
+        const vals: any[] = [];
+        // Mapear chaves do cliente → colunas reais na BD (alunos)
+        const fieldMap: Record<string, string> = {
+          dataNascimento: 'dataNascimento',
+          genero: 'genero',
+          bi: 'numeroBi',
+          encarregadoNome: 'nomeEncarregado',
+          encarregadoTelefone: 'telefoneEncarregado',
+        };
+        for (const [clientKey, dbCol] of Object.entries(fieldMap)) {
+          const v = b[clientKey];
+          if (v !== undefined && v !== null && String(v).trim() !== '') {
+            fields.push(`"${dbCol}"=$${vals.length + 1}`);
+            vals.push(String(v).trim());
+          }
+        }
+        if (fields.length > 0) {
+          vals.push(userId);
+          await query(`UPDATE public.alunos SET ${fields.join(',')} WHERE "utilizadorId"=$${vals.length} AND ativo=true`, vals);
+        }
+      } else {
+        const fields: string[] = [];
+        const vals: any[] = [];
+        const allowed = ['telefone', 'dataNascimento', 'genero', 'nif', 'morada'];
+        for (const k of allowed) {
+          const v = b[k];
+          if (v !== undefined && v !== null && String(v).trim() !== '') {
+            fields.push(`"${k}"=$${vals.length + 1}`);
+            vals.push(v);
+          }
+        }
+        if (fields.length > 0) {
+          vals.push(userId);
+          await query(`UPDATE public.utilizadores SET ${fields.join(',')} WHERE id=$${vals.length}`, vals);
+        }
+      }
+
+      json(res, 200, { ok: true });
+    } catch (e) {
+      json(res, 500, { error: (e as Error).message });
+    }
+  });
+
+  // GET /api/admin/perfis-pendentes — lista perfis incompletos para o administrador
+  app.get('/api/admin/perfis-pendentes', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const rolesPermitidas = ['admin', 'director', 'chefe_secretaria', 'ceo', 'pca', 'rh'];
+      if (!rolesPermitidas.includes((req as any).jwtUser?.role ?? '')) {
+        return json(res, 403, { error: 'Sem permissão.' });
+      }
+
+      const alunos = await query<JsonObject>(
+        `SELECT a.id, a.nome, a."dataNascimento", a.bi, a.nif, a."encarregadoNome",
+                a."encarregadoTelefone", a."encarregadoRelacao", a."createdAt", a.genero,
+                u.email
+         FROM public.alunos a
+         LEFT JOIN public.utilizadores u ON u.id = a."utilizadorId"
+         WHERE a.situacao = 'aguardando_enquadramento' AND a.ativo = true
+         ORDER BY a."createdAt" DESC`,
+        []
+      );
+
+      const professores = await query<JsonObject>(
+        `SELECT p.id, p.nome, p.foto, p.email AS email, p."utilizadorId",
+                f.id AS "funcionarioId", f."tipoContrato", f."salarioBase", f."dataContratacao",
+                f.departamento, f.cargo,
+                u.telefone AS telefone, u."dataNascimento", u.genero
+         FROM public.professores p
+         LEFT JOIN public.funcionarios f ON f."professorId" = p.id AND f.ativo = true
+         LEFT JOIN public.utilizadores u ON u.id = p."utilizadorId"
+         WHERE p.ativo = true
+           AND (f.id IS NULL OR f."tipoContrato" IS NULL
+                OR f."salarioBase" IS NULL OR COALESCE(f."salarioBase"::numeric, 0) = 0
+                OR f."dataContratacao" IS NULL)
+         ORDER BY p.nome ASC`,
+        []
+      );
+
+      const funcionarios = await query<JsonObject>(
+        `SELECT f.id, f.nome, f.bi, f.departamento, f.cargo,
+                f."tipoContrato", f."salarioBase", f."dataContratacao",
+                u.email, u.telefone, u."dataNascimento", u.genero
+         FROM public.funcionarios f
+         LEFT JOIN public.utilizadores u ON u.id = f."utilizadorId"
+         WHERE f.ativo = true
+           AND f."professorId" IS NULL
+           AND (f."tipoContrato" IS NULL
+                OR f."salarioBase" IS NULL OR COALESCE(f."salarioBase"::numeric, 0) = 0
+                OR f."dataContratacao" IS NULL)
+         ORDER BY f.nome ASC`,
+        []
+      );
+
+      json(res, 200, { alunos, professores, funcionarios });
+    } catch (e) {
+      console.error('[perfis-pendentes]', e);
+      json(res, 500, { error: (e as Error).message });
+    }
+  });
+
+  // PUT /api/admin/perfis-pendentes/professor/:id/completar-contrato — admin preenche contrato/salário do professor
+  app.put('/api/admin/perfis-pendentes/professor/:id/completar-contrato', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const rolesPermitidas = ['admin', 'director', 'chefe_secretaria', 'ceo', 'pca', 'rh'];
+      if (!rolesPermitidas.includes((req as any).jwtUser?.role ?? '')) return json(res, 403, { error: 'Sem permissão.' });
+      const { id } = req.params;
+      const b = req.body as Record<string, any>;
+
+      const fRows = await query<JsonObject>(`SELECT id FROM public.funcionarios WHERE "professorId" = $1 AND ativo = true LIMIT 1`, [id]);
+      if (fRows.length > 0) {
+        const fId = fRows[0].id;
+        const fields: string[] = [];
+        const vals: any[] = [];
+        for (const k of ['tipoContrato', 'salarioBase', 'dataContratacao', 'subsidioAlimentacao', 'subsidioTransporte', 'departamento', 'cargo']) {
+          if (b[k] !== undefined && b[k] !== null) { fields.push(`"${k}"=$${vals.length + 1}`); vals.push(b[k]); }
+        }
+        if (fields.length > 0) { vals.push(fId); await query(`UPDATE public.funcionarios SET ${fields.join(',')} WHERE id=$${vals.length}`, vals); }
+      } else {
+        const pRows = await query<JsonObject>(`SELECT * FROM public.professores WHERE id = $1 LIMIT 1`, [id]);
+        const p = pRows[0];
+        if (!p) return json(res, 404, { error: 'Professor não encontrado.' });
+        const { v4: uuidv4f } = await import('uuid');
+        await query(
+          `INSERT INTO public.funcionarios (id, nome, email, telefone, "utilizadorId", "professorId", "tipoContrato", "salarioBase", "dataContratacao", "subsidioAlimentacao", "subsidioTransporte", departamento, cargo, ativo)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,true)`,
+          [uuidv4f(), p.nome, p.email, p.telefone, p.utilizadorId, id,
+           b.tipoContrato ?? null, b.salarioBase ?? 0, b.dataContratacao ?? null,
+           b.subsidioAlimentacao ?? 0, b.subsidioTransporte ?? 0,
+           b.departamento ?? 'Docente', b.cargo ?? 'Professor']
+        );
+      }
+      json(res, 200, { ok: true });
+    } catch (e) {
+      json(res, 500, { error: (e as Error).message });
+    }
+  });
+
+  // PUT /api/admin/perfis-pendentes/funcionario/:id/completar-contrato — admin preenche contrato/salário do funcionário
+  app.put('/api/admin/perfis-pendentes/funcionario/:id/completar-contrato', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const rolesPermitidas = ['admin', 'director', 'chefe_secretaria', 'ceo', 'pca', 'rh'];
+      if (!rolesPermitidas.includes((req as any).jwtUser?.role ?? '')) return json(res, 403, { error: 'Sem permissão.' });
+      const { id } = req.params;
+      const b = req.body as Record<string, any>;
+      const fields: string[] = [];
+      const vals: any[] = [];
+      for (const k of ['tipoContrato', 'salarioBase', 'dataContratacao', 'subsidioAlimentacao', 'subsidioTransporte', 'departamento', 'cargo']) {
+        if (b[k] !== undefined && b[k] !== null) { fields.push(`"${k}"=$${vals.length + 1}`); vals.push(b[k]); }
+      }
+      if (fields.length === 0) return json(res, 400, { error: 'Nenhum campo para actualizar.' });
+      vals.push(id);
+      await query(`UPDATE public.funcionarios SET ${fields.join(',')} WHERE id=$${vals.length} AND ativo=true`, vals);
+      json(res, 200, { ok: true });
+    } catch (e) {
+      json(res, 500, { error: (e as Error).message });
+    }
+  });
+
+  // ─── FIM PERFIS PENDENTES ─────────────────────────────────────────────────────
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // PROTECÇÃO ANTI-CLONAGEM — Gestão de domínios e fingerprint (apenas CEO)
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  // GET /api/protecao/status — estado do sistema de protecção
+  app.get("/api/protecao/status", requireAuth, async (req: Request, res: Response) => {
+    if (req.jwtUser?.role !== 'ceo') return json(res, 403, { error: 'Acesso restrito ao CEO.' });
+    try {
+      const { getProtectionStatus, generateFingerprint } = await import("./protection");
+      const status = getProtectionStatus();
+      const fp = generateFingerprint();
+      json(res, 200, { ...status, fingerprintActual: fp });
+    } catch (e) { json(res, 500, { error: (e as Error).message }); }
+  });
+
+  // GET /api/protecao/dominios — listar domínios autorizados
+  app.get("/api/protecao/dominios", requireAuth, async (req: Request, res: Response) => {
+    if (req.jwtUser?.role !== 'ceo') return json(res, 403, { error: 'Acesso restrito ao CEO.' });
+    try {
+      const rows = await query<{ dominiosAutorizados?: string[] | null }>(
+        `SELECT "dominiosAutorizados" FROM public.config_geral LIMIT 1`, []
+      );
+      const dominios = rows[0]?.dominiosAutorizados ?? [];
+      json(res, 200, { dominios: Array.isArray(dominios) ? dominios : [] });
+    } catch (e) { json(res, 500, { error: (e as Error).message }); }
+  });
+
+  // POST /api/protecao/dominios — adicionar domínio autorizado
+  app.post("/api/protecao/dominios", requireAuth, async (req: Request, res: Response) => {
+    if (req.jwtUser?.role !== 'ceo') return json(res, 403, { error: 'Acesso restrito ao CEO.' });
+    try {
+      const b = requireBodyObject(req) as { dominio?: string };
+      const dominio = String(b.dominio ?? '').toLowerCase().trim();
+      if (!dominio || !/^[a-z0-9.-]+$/.test(dominio)) {
+        return json(res, 400, { error: 'Domínio inválido. Use apenas letras, números, pontos e hífenes.' });
+      }
+      const { adicionarDominio } = await import("./protection");
+      await adicionarDominio(dominio);
+      json(res, 200, { ok: true, dominio });
+    } catch (e) { json(res, 500, { error: (e as Error).message }); }
+  });
+
+  // DELETE /api/protecao/dominios/:dominio — remover domínio autorizado
+  app.delete("/api/protecao/dominios/:dominio", requireAuth, async (req: Request, res: Response) => {
+    if (req.jwtUser?.role !== 'ceo') return json(res, 403, { error: 'Acesso restrito ao CEO.' });
+    try {
+      const dominio = decodeURIComponent(req.params.dominio ?? '').toLowerCase().trim();
+      const { removerDominio } = await import("./protection");
+      await removerDominio(dominio);
+      json(res, 200, { ok: true, dominio });
+    } catch (e) { json(res, 500, { error: (e as Error).message }); }
+  });
+
+  // POST /api/protecao/resetar-fingerprint — re-registar fingerprint (após migração de servidor)
+  app.post("/api/protecao/resetar-fingerprint", requireAuth, async (req: Request, res: Response) => {
+    if (req.jwtUser?.role !== 'ceo') return json(res, 403, { error: 'Acesso restrito ao CEO.' });
+    try {
+      const { resetarFingerprint } = await import("./protection");
+      const fp = await resetarFingerprint();
+      console.log(`[protection] Fingerprint resetado pelo CEO ${req.jwtUser.email}`);
+      json(res, 200, { ok: true, fingerprint: fp });
+    } catch (e) { json(res, 500, { error: (e as Error).message }); }
+  });
+
+  // GET /api/protecao/alertas — listar alertas de segurança
+  app.get("/api/protecao/alertas", requireAuth, async (req: Request, res: Response) => {
+    if (req.jwtUser?.role !== 'ceo') return json(res, 403, { error: 'Acesso restrito ao CEO.' });
+    try {
+      const alertas = await query<any>(
+        `SELECT * FROM public.alertas_seguranca ORDER BY "criadoEm" DESC LIMIT 50`, []
+      );
+      json(res, 200, { alertas });
+    } catch (e) { json(res, 500, { error: (e as Error).message }); }
+  });
+
+  // PUT /api/protecao/alertas/:id/resolver — marcar alerta como resolvido
+  app.put("/api/protecao/alertas/:id/resolver", requireAuth, async (req: Request, res: Response) => {
+    if (req.jwtUser?.role !== 'ceo') return json(res, 403, { error: 'Acesso restrito ao CEO.' });
+    try {
+      await query(
+        `UPDATE public.alertas_seguranca SET resolvido=true,"resolvidoEm"=NOW() WHERE id=$1`,
+        [req.params.id]
+      );
+      json(res, 200, { ok: true });
+    } catch (e) { json(res, 500, { error: (e as Error).message }); }
+  });
+
+  // =============================================================================
+  // AVALIAÇÃO FORMATIVA (Art. 8º §1 — Dec. Exec. nº 04/2026)
+  // Modalidade principal do sistema de avaliação — separada das notas sumativas
+  // =============================================================================
+
+  // Garantir tabela na BD (runtime migration)
+  try {
+    await query(`
+      CREATE TABLE IF NOT EXISTS public.avaliacoes_formativas (
+        id varchar PRIMARY KEY DEFAULT gen_random_uuid(),
+        "alunoId" varchar NOT NULL REFERENCES public.alunos(id) ON DELETE CASCADE,
+        "turmaId" varchar NOT NULL REFERENCES public.turmas(id) ON DELETE CASCADE,
+        disciplina text NOT NULL,
+        "professorId" varchar NOT NULL REFERENCES public.professores(id) ON DELETE CASCADE,
+        "anoLetivo" text NOT NULL,
+        trimestre integer NOT NULL,
+        categoria text NOT NULL,
+        descricao text NOT NULL,
+        nivel text NOT NULL DEFAULT 'bom',
+        data text NOT NULL,
+        "criadoEm" timestamptz NOT NULL DEFAULT NOW(),
+        "atualizadoEm" timestamptz NOT NULL DEFAULT NOW()
+      )
+    `, []);
+    await query(`CREATE INDEX IF NOT EXISTS idx_av_form_turma ON public.avaliacoes_formativas("turmaId","disciplina","trimestre","anoLetivo")`, []);
+    await query(`CREATE INDEX IF NOT EXISTS idx_av_form_aluno ON public.avaliacoes_formativas("alunoId","anoLetivo")`, []);
+    // Coluna notaFormativa na tabela notas (Opção B — Dec. Exec. 04/2026)
+    await query(`ALTER TABLE public.notas ADD COLUMN IF NOT EXISTS "notaFormativa" real NOT NULL DEFAULT 0`, []);
+    // Colunas percFormativa e avaliacaoFormativaHabilitada na config_geral
+    await query(`ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "percFormativa" real NOT NULL DEFAULT 20`, []);
+    await query(`ALTER TABLE public.config_geral ADD COLUMN IF NOT EXISTS "avaliacaoFormativaHabilitada" boolean NOT NULL DEFAULT false`, []);
+    await query(`ALTER TABLE public.avaliacoes_formativas ALTER COLUMN "professorId" DROP NOT NULL`, []).catch(() => {});
+    console.log('[migration] avaliacoes_formativas table ensured.');
+  } catch (e: any) {
+    console.warn('[migration] avaliacoes_formativas:', e?.message?.split('\n')[0]);
+  }
+
+  // GET /api/avaliacoes-formativas — listar por turma/disciplina/trimestre/anoLetivo
+  app.get("/api/avaliacoes-formativas", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { turmaId, disciplina, trimestre, anoLetivo, alunoId, professorId } = req.query as Record<string, string>;
+      let sql = `
+        SELECT af.*, a.nome as "alunoNome", a."numeroMatricula" as "alunoNumero"
+        FROM public.avaliacoes_formativas af
+        LEFT JOIN public.alunos a ON a.id = af."alunoId"
+        WHERE 1=1`;
+      const params: unknown[] = [];
+      if (turmaId)    { params.push(turmaId);          sql += ` AND af."turmaId"=$${params.length}`; }
+      if (disciplina) { params.push(disciplina);        sql += ` AND af.disciplina=$${params.length}`; }
+      if (trimestre)  { params.push(parseInt(trimestre)); sql += ` AND af.trimestre=$${params.length}`; }
+      if (anoLetivo)  { params.push(anoLetivo);         sql += ` AND af."anoLetivo"=$${params.length}`; }
+      if (alunoId)    { params.push(alunoId);           sql += ` AND af."alunoId"=$${params.length}`; }
+      if (professorId){ params.push(professorId);       sql += ` AND af."professorId"=$${params.length}`; }
+      sql += ' ORDER BY af."criadoEm" DESC';
+      const rows = await query<JsonObject>(sql, params);
+      json(res, 200, rows);
+    } catch (e) { json(res, 500, { error: (e as Error).message }); }
+  });
+
+  // POST /api/avaliacoes-formativas — criar registo formativo
+  app.post("/api/avaliacoes-formativas", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const b = requireBodyObject(req);
+      const { alunoId, turmaId, disciplina, professorId, anoLetivo, trimestre,
+              categoria, descricao, nivel, data } = b as Record<string, unknown>;
+      if (!alunoId || !turmaId || !disciplina || !anoLetivo ||
+          !trimestre || !categoria || !descricao) {
+        return json(res, 400, { error: "Campos obrigatórios em falta" });
+      }
+      const rows = await query<JsonObject>(
+        `INSERT INTO public.avaliacoes_formativas
+         ("alunoId","turmaId",disciplina,"professorId","anoLetivo",trimestre,
+          categoria,descricao,nivel,data)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
+        [alunoId, turmaId, disciplina, professorId || null, anoLetivo,
+         parseInt(String(trimestre)), categoria, descricao,
+         nivel || 'bom', data || new Date().toISOString().slice(0, 10)]
+      );
+      json(res, 201, rows[0]);
+    } catch (e) { json(res, 500, { error: (e as Error).message }); }
+  });
+
+  // PUT /api/avaliacoes-formativas/:id — actualizar registo formativo
+  app.put("/api/avaliacoes-formativas/:id", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const b = requireBodyObject(req);
+      const { categoria, descricao, nivel, data } = b as Record<string, unknown>;
+      const rows = await query<JsonObject>(
+        `UPDATE public.avaliacoes_formativas
+         SET categoria=$1, descricao=$2, nivel=$3, data=$4, "atualizadoEm"=NOW()
+         WHERE id=$5 RETURNING *`,
+        [categoria, descricao, nivel || 'bom',
+         data || new Date().toISOString().slice(0, 10), id]
+      );
+      if (!rows.length) return json(res, 404, { error: "Não encontrado" });
+      json(res, 200, rows[0]);
+    } catch (e) { json(res, 500, { error: (e as Error).message }); }
+  });
+
+  // DELETE /api/avaliacoes-formativas/:id — remover registo formativo
+  app.delete("/api/avaliacoes-formativas/:id", requireAuth, async (req: Request, res: Response) => {
+    try {
+      await query(`DELETE FROM public.avaliacoes_formativas WHERE id=$1`, [req.params.id]);
+      json(res, 200, { ok: true });
+    } catch (e) { json(res, 500, { error: (e as Error).message }); }
+  });
+
+  // POST /api/avaliacoes-formativas/calcular — Opção B: calcula notaFormativa média e guarda em notas
+  // Body: { turmaId, disciplina, trimestre, anoLetivo }
+  // Converte nivel → escala 1-5: muito_bom=5, bom=4, satisfatorio=3, insuficiente=2
+  // MAC_final = MAC_sumativo×(1-percFormativa/100) + notaFormativa×(percFormativa/100)
+  app.post("/api/avaliacoes-formativas/calcular", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const b = requireBodyObject(req);
+      const { turmaId, disciplina, trimestre, anoLetivo } = b as Record<string, unknown>;
+      if (!turmaId || !disciplina || !trimestre || !anoLetivo) {
+        return json(res, 400, { error: "turmaId, disciplina, trimestre e anoLetivo são obrigatórios" });
+      }
+      const NIVEL_ESCALA: Record<string, number> = {
+        muito_bom: 5, bom: 4, satisfatorio: 3, insuficiente: 2
+      };
+      // Calcular média por aluno
+      const rows = await query<{ alunoId: string; media: string }>(
+        `SELECT "alunoId",
+                AVG(CASE nivel
+                      WHEN 'muito_bom'    THEN 5
+                      WHEN 'bom'          THEN 4
+                      WHEN 'satisfatorio' THEN 3
+                      WHEN 'insuficiente' THEN 2
+                      ELSE 3
+                    END) as media
+         FROM public.avaliacoes_formativas
+         WHERE "turmaId"=$1 AND disciplina=$2 AND trimestre=$3 AND "anoLetivo"=$4
+         GROUP BY "alunoId"`,
+        [turmaId, disciplina, parseInt(String(trimestre)), anoLetivo]
+      );
+      if (!rows.length) return json(res, 200, { atualizados: 0, resultados: [] });
+      const resultados: { alunoId: string; notaFormativa: number; atualizado: boolean }[] = [];
+      for (const row of rows) {
+        const notaFormativa = Math.round(parseFloat(row.media) * 10) / 10;
+        // Garantir registo na tabela notas; se não existir, o professor ainda não abriu a pauta — ignorar
+        const updated = await query<{ id: string }>(
+          `UPDATE public.notas SET "notaFormativa"=$1
+           WHERE "turmaId"=$2 AND disciplina=$3 AND trimestre=$4 AND "anoLetivo"=$5 AND "alunoId"=$6
+           RETURNING id`,
+          [notaFormativa, turmaId, disciplina, parseInt(String(trimestre)), anoLetivo, row.alunoId]
+        );
+        resultados.push({ alunoId: row.alunoId, notaFormativa, atualizado: updated.length > 0 });
+      }
+      json(res, 200, { atualizados: resultados.filter(r => r.atualizado).length, resultados });
+    } catch (e) { json(res, 500, { error: (e as Error).message }); }
+  });
+
+  // GET /api/avaliacoes-formativas/resumo — resumo por aluno (contagem + último nível por categoria)
+  app.get("/api/avaliacoes-formativas/resumo", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { turmaId, disciplina, trimestre, anoLetivo } = req.query as Record<string, string>;
+      if (!turmaId || !disciplina || !trimestre || !anoLetivo) {
+        return json(res, 400, { error: "turmaId, disciplina, trimestre e anoLetivo são obrigatórios" });
+      }
+      const rows = await query<JsonObject>(
+        `SELECT af."alunoId", a.nome as "alunoNome", af.categoria,
+                COUNT(*) as total,
+                MODE() WITHIN GROUP (ORDER BY af.nivel) as "nivelMaisFrequente",
+                MAX(af."criadoEm") as "ultimaAvaliacao"
+         FROM public.avaliacoes_formativas af
+         LEFT JOIN public.alunos a ON a.id = af."alunoId"
+         WHERE af."turmaId"=$1 AND af.disciplina=$2
+           AND af.trimestre=$3 AND af."anoLetivo"=$4
+         GROUP BY af."alunoId", a.nome, af.categoria
+         ORDER BY a.nome, af.categoria`,
+        [turmaId, disciplina, parseInt(trimestre), anoLetivo]
+      );
+      json(res, 200, rows);
+    } catch (e) { json(res, 500, { error: (e as Error).message }); }
+  });
+
+
+  // =============================================================================
+  // AVALIAÇÃO DIAGNÓSTICA (Art. 4º-d, Decreto Exec. nº 3/20)
+  // Modalidade formativa/diagnóstica — NÃO conta para cálculo de notas.
+  // Registo por professor, por turma/disciplina/trimestre/aluno.
+  // =============================================================================
+
+  // Migração: criar tabela avaliacoes_diagnosticas
+  try {
+    await query(`
+      CREATE TABLE IF NOT EXISTS public.avaliacoes_diagnosticas (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "turmaId" UUID NOT NULL,
+        "turmaNome" TEXT NOT NULL DEFAULT '',
+        "disciplinaId" UUID,
+        "disciplinaNome" TEXT NOT NULL DEFAULT '',
+        "alunoId" UUID NOT NULL,
+        "alunoNome" TEXT NOT NULL DEFAULT '',
+        "anoLetivo" TEXT NOT NULL,
+        trimestre INTEGER NOT NULL DEFAULT 1,
+        nivel TEXT NOT NULL DEFAULT 'satisfaz',
+        nota NUMERIC(5,2),
+        observacoes TEXT DEFAULT '',
+        "registadoPorId" UUID,
+        "registadoPorNome" TEXT DEFAULT '',
+        "registadoEm" TIMESTAMPTZ NOT NULL DEFAULT now()
+      )
+    `, []);
+    await query(`CREATE INDEX IF NOT EXISTS idx_diag_turma ON public.avaliacoes_diagnosticas("turmaId","disciplinaNome","trimestre","anoLetivo")`, []);
+    await query(`CREATE INDEX IF NOT EXISTS idx_diag_aluno ON public.avaliacoes_diagnosticas("alunoId","anoLetivo")`, []);
+    console.log('[migration] avaliacoes_diagnosticas table ensured.');
+  } catch (e) {
+    console.warn('[migration] avaliacoes_diagnosticas:', (e as any)?.message?.split('\n')[0]);
+  }
+
+  // GET /api/diagnostica — listar por turma/disciplina/trimestre/anoLetivo
+  app.get("/api/diagnostica", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { turmaId, disciplinaNome, trimestre, anoLetivo, alunoId } = req.query as Record<string, string>;
+      const params: unknown[] = [];
+      const wheres: string[] = [];
+      if (turmaId) { params.push(turmaId); wheres.push(`d."turmaId"=${params.length}`); }
+      if (disciplinaNome) { params.push(disciplinaNome); wheres.push(`d."disciplinaNome"=${params.length}`); }
+      if (trimestre) { params.push(parseInt(trimestre)); wheres.push(`d.trimestre=${params.length}`); }
+      if (anoLetivo) { params.push(anoLetivo); wheres.push(`d."anoLetivo"=${params.length}`); }
+      if (alunoId) { params.push(alunoId); wheres.push(`d."alunoId"=${params.length}`); }
+      const where = wheres.length ? `WHERE ${wheres.join(' AND ')}` : '';
+      const rows = await query<JsonObject>(
+        `SELECT d.*, a.nome || ' ' || a.apelido as "alunoNomeCompleto"
+         FROM public.avaliacoes_diagnosticas d
+         LEFT JOIN public.alunos a ON a.id = d."alunoId"
+         ${where}
+         ORDER BY d."alunoNome" ASC, d."registadoEm" DESC`,
+        params
+      );
+      json(res, 200, rows);
+    } catch (e) { json(res, 500, { error: (e as Error).message }); }
+  });
+
+  // POST /api/diagnostica/lote — gravar em lote para uma turma/disciplina/trimestre
+  app.post("/api/diagnostica/lote", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const b = requireBodyObject(req);
+      const { turmaId, turmaNome, disciplinaId, disciplinaNome, anoLetivo, trimestre, registos } = b as {
+        turmaId: string; turmaNome: string; disciplinaId?: string; disciplinaNome: string;
+        anoLetivo: string; trimestre: number; registos: Array<{
+          alunoId: string; alunoNome: string; nivel: string; nota?: number | null; observacoes?: string;
+        }>;
+      };
+      if (!turmaId || !disciplinaNome || !anoLetivo || !registos?.length) {
+        return json(res, 400, { error: 'turmaId, disciplinaNome, anoLetivo e registos são obrigatórios.' });
+      }
+      const NIVEIS = ['nao_satisfaz', 'satisfaz', 'bom', 'muito_bom'];
+      const saved: unknown[] = [];
+      for (const r of registos) {
+        if (!r.alunoId) continue;
+        const nivel = NIVEIS.includes(r.nivel) ? r.nivel : 'satisfaz';
+        const existente = await query<JsonObject>(
+          `SELECT id FROM public.avaliacoes_diagnosticas WHERE "turmaId"=$1 AND "disciplinaNome"=$2 AND "alunoId"=$3 AND "anoLetivo"=$4 AND trimestre=$5 LIMIT 1`,
+          [turmaId, disciplinaNome, r.alunoId, anoLetivo, trimestre || 1]
+        );
+        if (existente.length) {
+          const upd = await query<JsonObject>(
+            `UPDATE public.avaliacoes_diagnosticas
+             SET nivel=$1, nota=$2, observacoes=$3, "registadoPorId"=$4, "registadoPorNome"=$5, "registadoEm"=now()
+             WHERE id=$6 RETURNING *`,
+            [nivel, r.nota ?? null, r.observacoes || '',
+             req.jwtUser?.userId || null, req.jwtUser?.email || '', existente[0].id]
+          );
+          if (upd.length) saved.push(upd[0]);
+        } else {
+          const ins = await query<JsonObject>(
+            `INSERT INTO public.avaliacoes_diagnosticas
+               ("turmaId","turmaNome","disciplinaId","disciplinaNome","alunoId","alunoNome","anoLetivo",trimestre,nivel,nota,observacoes,"registadoPorId","registadoPorNome","registadoEm")
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,now()) RETURNING *`,
+            [turmaId, turmaNome || '', disciplinaId || null, disciplinaNome, r.alunoId, r.alunoNome || '',
+             anoLetivo, trimestre || 1, nivel, r.nota ?? null, r.observacoes || '',
+             req.jwtUser?.userId || null, req.jwtUser?.email || '']
+          );
+          if (ins.length) saved.push(ins[0]);
+        }
+      }
+      json(res, 200, { ok: true, count: saved.length, registos: saved });
+    } catch (e) { json(res, 500, { error: (e as Error).message }); }
+  });
+
+  // PUT /api/diagnostica/:id — actualizar registo individual
+  app.put("/api/diagnostica/:id", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const b = requireBodyObject(req);
+      const NIVEIS = ['nao_satisfaz', 'satisfaz', 'bom', 'muito_bom'];
+      const nivel = NIVEIS.includes(b.nivel as string) ? b.nivel as string : 'satisfaz';
+      const rows = await query<JsonObject>(
+        `UPDATE public.avaliacoes_diagnosticas
+         SET nivel=$1, nota=$2, observacoes=$3, "registadoPorId"=$4, "registadoPorNome"=$5, "registadoEm"=now()
+         WHERE id=$6 RETURNING *`,
+        [nivel, b.nota ?? null, b.observacoes || '',
+         req.jwtUser?.userId || null, req.jwtUser?.email || '', req.params.id]
+      );
+      if (!rows.length) return json(res, 404, { error: 'Registo não encontrado.' });
+      json(res, 200, rows[0]);
+    } catch (e) { json(res, 500, { error: (e as Error).message }); }
+  });
+
+  // DELETE /api/diagnostica/:id — remover registo
+  app.delete("/api/diagnostica/:id", requireAuth, async (req: Request, res: Response) => {
+    try {
+      await query(`DELETE FROM public.avaliacoes_diagnosticas WHERE id=$1`, [req.params.id]);
+      json(res, 200, { ok: true });
+    } catch (e) { json(res, 500, { error: (e as Error).message }); }
+  });
+
+  // GET /api/diagnostica/resumo/:turmaId — resumo por turma
+  app.get("/api/diagnostica/resumo/:turmaId", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { anoLetivo, trimestre } = req.query as Record<string, string>;
+      const params: unknown[] = [req.params.turmaId];
+      let where = `WHERE d."turmaId"=$1`;
+      if (anoLetivo) { params.push(anoLetivo); where += ` AND d."anoLetivo"=${params.length}`; }
+      if (trimestre) { params.push(parseInt(trimestre)); where += ` AND d.trimestre=${params.length}`; }
+      const rows = await query<JsonObject>(
+        `SELECT d."disciplinaNome", d.trimestre,
+           COUNT(*)::int as total,
+           COUNT(*) FILTER (WHERE d.nivel='muito_bom')::int as "muitoBom",
+           COUNT(*) FILTER (WHERE d.nivel='bom')::int as "bom",
+           COUNT(*) FILTER (WHERE d.nivel='satisfaz')::int as "satisfaz",
+           COUNT(*) FILTER (WHERE d.nivel='nao_satisfaz')::int as "naoSatisfaz",
+           ROUND(AVG(d.nota)::numeric,1) as "mediaNotas"
+         FROM public.avaliacoes_diagnosticas d
+         ${where}
+         GROUP BY d."disciplinaNome", d.trimestre
+         ORDER BY d.trimestre, d."disciplinaNome"`,
+        params
+      );
+      json(res, 200, rows);
+    } catch (e) { json(res, 500, { error: (e as Error).message }); }
+  });
+
+  // GET /api/diagnostica/relatorio — resumo global por turma/disciplina/trimestre (admin/director)
+  app.get("/api/diagnostica/relatorio", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { anoLetivo, turmaId, trimestre } = req.query as Record<string, string>;
+      const params: unknown[] = [];
+      let where = "WHERE 1=1";
+      if (anoLetivo)  { params.push(anoLetivo);          where += ` AND d."anoLetivo"=$${params.length}`; }
+      if (turmaId)    { params.push(turmaId);            where += ` AND d."turmaId"=$${params.length}`; }
+      if (trimestre)  { params.push(parseInt(trimestre)); where += ` AND d.trimestre=$${params.length}`; }
+      const rows = await query<JsonObject>(
+        `SELECT d."turmaId", t.nome as "turmaNome", d."disciplinaNome", d.trimestre,
+           COUNT(*)::int as total,
+           COUNT(*) FILTER (WHERE d.nivel='muito_bom')::int  as "muitoBom",
+           COUNT(*) FILTER (WHERE d.nivel='bom')::int        as "bom",
+           COUNT(*) FILTER (WHERE d.nivel='satisfaz')::int   as "satisfaz",
+           COUNT(*) FILTER (WHERE d.nivel='nao_satisfaz')::int as "naoSatisfaz",
+           ROUND(AVG(d.nota)::numeric,1) as "mediaNotas"
+         FROM public.avaliacoes_diagnosticas d
+         LEFT JOIN public.turmas t ON t.id = d."turmaId"
+         ${where}
+         GROUP BY d."turmaId", t.nome, d."disciplinaNome", d.trimestre
+         ORDER BY t.nome, d.trimestre, d."disciplinaNome"`,
+        params
+      );
+      json(res, 200, rows);
+    } catch (e) { json(res, 500, { error: (e as Error).message }); }
+  });
+
+  const httpServer = createServer(app);
+
+  return httpServer;
+}

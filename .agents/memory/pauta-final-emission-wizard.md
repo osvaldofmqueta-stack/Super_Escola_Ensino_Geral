@@ -1,0 +1,10 @@
+---
+name: Pauta Final emission wizard gating
+description: editor-documentos.tsx uses separate isPauta/isPautaFinal/isListaTurma/isMiniPautaDisciplina flags per doc tipo — any new tipo-specific UI branch must add its flag to BOTH the left-wizard body ternary and the right-side summary ternary, or it silently falls through to the unrelated default branch (AlunoSearchPanel).
+---
+
+In `app/(main)/editor-documentos.tsx`'s "Emitir Documento" screen, each doc template `tipo` has its own boolean (`isPauta`, `isPautaFinal`, `isListaTurma`, `isMiniPautaDisciplina`, `isMapa`, etc.) computed from `emitTemplate?.tipo`. The actual rendering is gated by two separate top-level ternaries (left panel body ~line 13792, right panel summary ~line 14332) that each must independently OR-in every flag that should share that rendering path — helper functions like `canPrint`/Excel-button logic having a flag wired in does NOT mean the body ternary also has it.
+
+**Why:** `pauta_final` (tipo `'pauta_final'`) had its own flag (`isPautaFinal`) and full supporting logic (HTML/Excel builders, right-panel "Resumo da Pauta Final" UI with correct labels) already written, but the flag was never added to the two body/summary ternaries — so opening "Pauta Final (por Turma)" always fell through to the generic `<AlunoSearchPanel>` (student search) branch instead of the turma-based wizard. This was invisible in code review unless you traced each ternary's exact OR-list against every flag's definition.
+
+**How to apply:** When adding/fixing a document tipo's emission wizard, grep every place that flag *should* appear (`canEmit`, print/export buttons, body ternary, summary ternary, step-numbering labels) and confirm the top-level ternaries include it — don't assume "the backend logic exists" implies "the UI path is reachable." Also remember: this repo's frontend is a pre-built static `dist/` (Expo web export) served by the Express server; source edits do NOT appear in the running app until you `touch /tmp/dist-rebuild-requested` and restart `scripts/start.sh`'s workflow (build takes ~1-2 min in background, poll for `dist/index.html` mtime change or watch `/tmp/expo-build.log`).

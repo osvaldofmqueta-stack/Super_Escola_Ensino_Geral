@@ -1,0 +1,110 @@
+<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8"/>
+<title>Mini-Pauta · {{DISCIPLINA}} · {{TURMA}}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important;}
+  body{font-family:'Times New Roman',Calibri,Arial,sans-serif;background:#fff;color:#000;padding:10px 14px;font-size:11px;}
+  .top-bar{position:relative;display:block;min-height:120px;margin-bottom:4px;}
+  .visto{position:absolute;left:0;top:0;width:170px;border:1px solid #000;padding:4px 6px;font-size:9px;line-height:1.35;}
+  .visto-title{text-align:center;font-weight:bold;font-size:10px;letter-spacing:0.5px;margin-bottom:4px;}
+  .visto-data{font-size:9px;margin-bottom:18px;}
+  .visto-cargo{border-top:1px solid #000;padding-top:2px;text-align:center;font-size:9px;font-style:italic;}
+  .doc-header{text-align:center;padding-top:0;}
+  .doc-header img{width:78px;height:78px;object-fit:contain;display:block;margin:0 auto 2px;}
+  .doc-header .rep{font-size:11px;font-weight:bold;line-height:1.3;}
+  .doc-header .min{font-size:10.5px;font-weight:bold;line-height:1.3;}
+  .doc-header .min2{font-size:10.5px;font-weight:bold;line-height:1.3;}
+  .doc-header .escola{font-size:11.5px;font-weight:bold;text-decoration:underline;line-height:1.4;margin-bottom:2px;text-transform:uppercase;letter-spacing:1px;}
+  .doc-header .area-turma{font-size:10.5px;font-weight:bold;text-decoration:underline;line-height:1.3;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;}
+  .doc-title{text-align:center;font-size:13px;font-weight:bold;margin:2px 0 6px;letter-spacing:0.5px;}
+  .info-bar{border-top:1px solid #000;border-bottom:1px solid #000;padding:3px 0;font-size:10px;}
+  .info-bar .row1,.info-bar .row2{display:flex;flex-wrap:wrap;gap:16px;padding:1px 4px;}
+  .info-bar .lbl{font-weight:bold;}
+  table{width:100%;border-collapse:collapse;font-size:8.5px;margin-top:0;}
+  th,td{border:1px solid #444;padding:2px 2px;}
+  thead tr.tr-group th{background:#1a6b3c !important;color:#fff !important;font-size:9px;font-weight:bold;text-align:center;white-space:nowrap;}
+  thead tr.tr-sub th{font-size:7.5px;font-weight:bold;text-align:center;padding:1px 2px;}
+  thead tr.tr-sub th.th-aval{background:#dff0da !important;color:#1a3a1a !important;}
+  thead tr.tr-sub th.th-mac{background:#5da85d !important;color:#fff !important;}
+  thead tr.tr-sub th.th-npp{background:#a8d5a2 !important;color:#0a2a0a !important;}
+  thead tr.tr-sub th.th-npt{background:#88c488 !important;color:#0a2a0a !important;}
+  thead tr.tr-sub th.th-mt{background:#1a6b3c !important;color:#fff !important;}
+  th.col-num{width:22px;text-align:center;}
+  th.col-nome{min-width:170px;text-align:left;padding-left:5px;}
+  th.col-mfd{width:30px;background:#a8d5a2 !important;color:#0a2a0a !important;}
+  th.col-obs{width:62px;}
+  td.nc{text-align:center;font-size:9px;}
+  td.nc-num{text-align:center;font-size:9px;font-weight:bold;}
+  td.nc-nome{font-size:9px;padding-left:5px;font-weight:bold;}
+  td.nc-obs{text-align:center;font-size:8.5px;font-weight:bold;}
+  td.tc-aval{text-align:center;}
+  td.tc-mac{background:#b8e4b8 !important;font-weight:bold;text-align:center;}
+  td.tc-npp{text-align:center;}
+  td.tc-npt{background:#daf0da !important;text-align:center;}
+  td.tc-mt{background:#a8d5a2 !important;text-align:center;}
+  td.mfd{background:#c6efce !important;text-align:center;}
+  tbody tr:last-child td{border-bottom:1.5px solid #1a6b3c;}
+  .legenda{margin-top:7px;font-size:8.5px;font-style:italic;color:#333;padding:2px 4px;border-top:1px solid #ccc;}
+  .legenda b{font-style:normal;color:#000;}
+  .footer{margin-top:18px;display:flex;justify-content:space-between;align-items:flex-end;gap:18px;page-break-inside:avoid;break-inside:avoid;}
+  .footer-loc{font-size:10px;flex:0 0 auto;align-self:flex-end;padding-bottom:2px;}
+  .sigs{display:flex;justify-content:flex-end;flex:1;gap:30px;margin-top:34px;}
+  .sig{text-align:center;min-width:170px;}
+  .sig-line{border-top:1px solid #000;padding-top:3px;font-size:10px;font-weight:bold;}
+  .sig-name{font-size:10px;font-weight:bold;margin-top:0;}
+  @media print{
+    html,body{height:auto;}
+    body{padding:6px 8px;}
+    @page{size:A4 landscape;margin:6mm 6mm;}
+    .no-print{display:none;}
+    table{page-break-inside:auto;}
+    thead{display:table-header-group;}
+    tr{page-break-inside:avoid;break-inside:avoid;}
+  }
+</style>
+</head><body>
+<div class="top-bar">
+  <div class="visto">
+    <div class="visto-title">VISTO</div>
+    <div class="visto-data">Data ___/___/______</div>
+    <div class="visto-cargo">A Chefe de Repartição e Ensino</div>
+  </div>
+  <div class="doc-header">
+    <img src="{{BRASAO_URL}}" alt="Brasão" onerror="this.style.display='none'"/>
+    <div class="rep">{{CABECALHO_LINHA1}}</div>
+    <div class="min">{{CABECALHO_LINHA2}}</div>
+    <div class="min2">{{CABECALHO_LINHA3}}</div>
+    <div class="escola">{{CABECALHO_LINHA4}}</div>
+    <div class="area-turma">{{AREA_TURMA}}, CLASSE: {{CLASSE}}ª &nbsp; TURMA: {{TURMA}}, ANO LECTIVO: {{ANO_LECTIVO}}</div>
+  </div>
+</div>
+<div class="doc-title">MINI-PAUTA — {{DISCIPLINA}} — {{CLASSE}}ª CLASSE — Ano Lectivo: {{ANO_LECTIVO}}</div>
+<div class="info-bar">
+  <div class="row1">
+    <div><span class="lbl">ESCOLA:</span> {{NOME_ESCOLA}}</div>
+    <div><span class="lbl">MUNICÍPIO DE:</span> {{MUNICIPIO}}</div>
+    <div><span class="lbl">PROVÍNCIA DE:</span> {{PROVINCIA}}</div>
+  </div>
+  <div class="row2">
+    <div><span class="lbl">PAUTA Nº</span> {{PAUTA_NUMERO}}</div>
+    <div><span class="lbl">ANO LECTIVO:</span> {{ANO_LECTIVO}}</div>
+    <div><span class="lbl">CLASSE:</span> {{CLASSE}}ª Classe</div>
+    <div><span class="lbl">TURMA:</span> {{TURMA}}</div>
+    <div><span class="lbl">SALA:</span> {{SALA}}</div>
+    <div><span class="lbl">TURNO:</span> {{TURNO}}</div>
+    <div><span class="lbl">DATA:</span> {{DATA_ACTUAL}}</div>
+  </div>
+</div>
+{{TABELA_MINI_PAUTA}}
+<div class="legenda"><b>Legenda:</b> {{LEGENDA_MINI_PAUTA}}</div>
+<div class="footer">
+  <div class="footer-loc">{{LOCAL_DATA}}</div>
+  <div class="sigs">
+    <div class="sig"><div class="sig-line">O(A) SUB-DIRECTOR(A) PEDAGÓGICO</div><div class="sig-name">{{NOME_SUBDIRECTOR_PEDAGOGICO}}</div></div>
+    <div class="sig"><div class="sig-line">O(A) DIRECTOR(A) DA ESCOLA</div><div class="sig-name">{{NOME_DIRECTOR}}</div></div>
+    <div class="sig"><div class="sig-line">O PROFESSOR</div><div class="sig-name">{{NOME_PROFESSOR}}</div></div>
+  </div>
+</div>
+<div class="no-print" style="text-align:center;margin-top:20px;">
+  <button onclick="window.print()" style="padding:10px 32px;font-size:14px;background:#1a6b3c;color:#fff;border:none;border-radius:6px;cursor:pointer;">Imprimir / Guardar PDF</button>
+</div>
+</body></html>

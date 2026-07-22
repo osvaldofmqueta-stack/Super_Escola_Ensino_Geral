@@ -1,0 +1,254 @@
+[
+  {
+    "name": "01-dashboard",
+    "path": "/",
+    "label": "Painel de Controlo",
+    "ok": false
+  },
+  {
+    "name": "02-secretaria-hub",
+    "path": "/secretaria-hub",
+    "label": "Painel da Secretaria",
+    "ok": true
+  },
+  {
+    "name": "03-pedagogico",
+    "path": "/pedagogico",
+    "label": "Área Pedagógica",
+    "ok": true
+  },
+  {
+    "name": "04-alunos",
+    "path": "/alunos",
+    "label": "Alunos",
+    "ok": true
+  },
+  {
+    "name": "05-admissao",
+    "path": "/admissao",
+    "label": "Processo de Admissão",
+    "ok": true
+  },
+  {
+    "name": "06-transferencias",
+    "path": "/transferencias",
+    "label": "Transferências",
+    "ok": true
+  },
+  {
+    "name": "07-professores",
+    "path": "/professores",
+    "label": "Professores",
+    "ok": true
+  },
+  {
+    "name": "08-turmas",
+    "path": "/turmas",
+    "label": "Turmas",
+    "ok": true
+  },
+  {
+    "name": "09-salas",
+    "path": "/salas",
+    "label": "Salas de Aula",
+    "ok": true
+  },
+  {
+    "name": "10-notas",
+    "path": "/notas",
+    "label": "Notas",
+    "ok": true
+  },
+  {
+    "name": "11-presencas",
+    "path": "/presencas",
+    "label": "Presenças",
+    "ok": true
+  },
+  {
+    "name": "12-horario",
+    "path": "/horario",
+    "label": "Horário",
+    "ok": true
+  },
+  {
+    "name": "13-historico",
+    "path": "/historico",
+    "label": "Histórico Académico",
+    "ok": true
+  },
+  {
+    "name": "14-grelha",
+    "path": "/grelha",
+    "label": "Grelha Curricular",
+    "ok": true
+  },
+  {
+    "name": "15-consulta-aluno",
+    "path": "/consulta-aluno",
+    "label": "Consulta de Aluno",
+    "ok": true
+  },
+  {
+    "name": "16-avaliacao-profs",
+    "path": "/avaliacao-professores",
+    "label": "Avaliação de Professores",
+    "ok": true
+  },
+  {
+    "name": "17-quadro-honra",
+    "path": "/quadro-honra",
+    "label": "Quadro de Honra",
+    "ok": true
+  },
+  {
+    "name": "18-finalistas",
+    "path": "/finalistas",
+    "label": "Estudantes Finalistas",
+    "ok": true
+  },
+  {
+    "name": "19-alumni",
+    "path": "/alumni",
+    "label": "Antigos Alunos (Alumni)",
+    "ok": true
+  },
+  {
+    "name": "20-acomp-pautas",
+    "path": "/acompanhamento-pautas",
+    "label": "Acompanhamento de Pautas",
+    "ok": true
+  },
+  {
+    "name": "21-conselho",
+    "path": "/conselho",
+    "label": "Conselho de Avaliação",
+    "ok": true
+  },
+  {
+    "name": "22-diagnostica",
+    "path": "/diagnostica",
+    "label": "Avaliação Diagnóstica",
+    "ok": true
+  },
+  {
+    "name": "23-formativa",
+    "path": "/formativa",
+    "label": "Avaliação Formativa",
+    "ok": true
+  },
+  {
+    "name": "24-exclusoes",
+    "path": "/exclusoes-faltas",
+    "label": "Exclusões & Faltas",
+    "ok": true
+  },
+  {
+    "name": "25-exame-recurso",
+    "path": "/exame-recurso",
+    "label": "Exame de Recurso",
+    "ok": true
+  },
+  {
+    "name": "26-melhoria-nota",
+    "path": "/melhoria-nota",
+    "label": "Melhoria de Nota",
+    "ok": true
+  },
+  {
+    "name": "27-reapreciacao",
+    "path": "/pedidos-reapreciacao",
+    "label": "Pedido de Reapreciação",
+    "ok": true
+  },
+  {
+    "name": "28-exame-nacional",
+    "path": "/exame-nacional",
+    "label": "Exame Nacional",
+    "ok": true
+  },
+  {
+    "name": "29-arquivo-pautas",
+    "path": "/arquivo-pautas",
+    "label": "Arquivo de Pautas",
+    "ok": true
+  },
+  {
+    "name": "30-editor-docs",
+    "path": "/editor-documentos",
+    "label": "Editor de Documentos",
+    "ok": true
+  },
+  {
+    "name": "31-arquivo-docs",
+    "path": "/arquivo-documentos",
+    "label": "Arquivo de Documentos",
+    "ok": true
+  },
+  {
+    "name": "32-visao-geral",
+    "path": "/visao-geral",
+    "label": "Visão Geral Multi-Ano",
+    "ok": true
+  },
+  {
+    "name": "33-relatorios",
+    "path": "/relatorios",
+    "label": "Relatórios",
+    "ok": true
+  },
+  {
+    "name": "34-financeiro",
+    "path": "/financeiro",
+    "label": "Gestão Financeira",
+    "ok": true
+  },
+  {
+    "name": "35-tesouraria",
+    "path": "/tesouraria",
+    "label": "Tesouraria",
+    "ok": true
+  },
+  {
+    "name": "36-rh-hub",
+    "path": "/rh-hub",
+    "label": "Recursos Humanos (Hub)",
+    "ok": true
+  },
+  {
+    "name": "37-rh-controle",
+    "path": "/rh-controle",
+    "label": "Gestão de Pessoal",
+    "ok": true
+  },
+  {
+    "name": "38-rh-payroll",
+    "path": "/rh-payroll",
+    "label": "Folha de Salários",
+    "ok": true
+  },
+  {
+    "name": "39-calendario",
+    "path": "/calendario-academico",
+    "label": "Calendário Académico",
+    "ok": true
+  },
+  {
+    "name": "40-eventos",
+    "path": "/eventos",
+    "label": "Eventos Escolares",
+    "ok": true
+  },
+  {
+    "name": "41-biblioteca",
+    "path": "/biblioteca",
+    "label": "Biblioteca",
+    "ok": true
+  },
+  {
+    "name": "42-trabalhos-finais",
+    "path": "/trabalhos-finais",
+    "label": "Trabalhos Finais de Curso",
+    "ok": true
+  }
+]

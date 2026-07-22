@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, shrink-to-fit=no, viewport-fit=cover" />
+
+    <title>Super Escola</title>
+
+    <!-- PWA / Mobile browser meta -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Super Escola" />
+    <meta name="theme-color" content="#0B1628" />
+    <meta name="msapplication-navbutton-color" content="#0B1628" />
+    <meta name="msapplication-TileColor" content="#0B1628" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512.png" />
+
+    <style id="expo-reset">
+      * {
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background-color: #0B1628;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        overscroll-behavior: none;
+        overscroll-behavior-y: none;
+        touch-action: manipulation;
+      }
+
+      body {
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        overscroll-behavior: none;
+      }
+
+      #root {
+        display: flex;
+        height: 100%;
+        width: 100%;
+        flex: 1;
+        overflow: hidden;
+        position: relative;
+        overscroll-behavior: none;
+      }
+
+      /* Garante que nenhum elemento filho despoleta PTR */
+      * {
+        overscroll-behavior: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <noscript>
+      Precisa de activar o JavaScript para usar esta aplicação.
+    </noscript>
+
+    <!-- Splash screen — visível antes do JS carregar -->
+    <div id="splash" style="
+      position: fixed; inset: 0; z-index: 99999;
+      background: #0B1628;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    ">
+      <div style="position: relative; margin-bottom: 28px;">
+        <img
+          src="/icons/icon-192.png"
+          alt="Super Escola"
+          width="96" height="96"
+          style="border-radius: 22px; display: block; box-shadow: 0 8px 32px rgba(0,0,0,0.5);"
+          onerror="this.style.display='none'"
+        />
+        <div style="
+          position: absolute; inset: 0; border-radius: 22px;
+          background: linear-gradient(135deg, rgba(200,154,42,0.25) 0%, transparent 60%);
+          pointer-events: none;
+        "></div>
+      </div>
+      <div style="color: #FFFFFF; font-size: 26px; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 6px;">
+        Super Escola
+      </div>
+      <div style="color: rgba(255,255,255,0.45); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 48px;">
+        Sistema Integrado de Gestão Académica
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: #C89A2A; animation: pulse 1.2s ease-in-out infinite;"></span>
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: #C89A2A; animation: pulse 1.2s ease-in-out 0.2s infinite;"></span>
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: #C89A2A; animation: pulse 1.2s ease-in-out 0.4s infinite;"></span>
+      </div>
+      <style>
+        @keyframes pulse {
+          0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+          40% { opacity: 1; transform: scale(1.2); }
+        }
+      </style>
+    </div>
+
+    <div id="root"></div>
+  <script>
+    window.hideSplash = function () {
+      var s = document.getElementById('splash');
+      if (!s) return;
+      s.style.opacity = '0';
+      s.style.visibility = 'hidden';
+      setTimeout(function () { s.remove(); }, 600);
+    };
+    setTimeout(function () { if (window.hideSplash) window.hideSplash(); }, 8000);
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+          .then(function (reg) { console.log('[SW] Registado:', reg.scope); })
+          .catch(function (err) { console.warn('[SW] Falhou:', err); });
+      });
+    }
+
+    // PWA Install Banner
+    (function () {
+      var deferredPrompt = null;
+      var DISMISS_KEY = 'pwa_install_dismissed';
+
+      window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (!sessionStorage.getItem(DISMISS_KEY)) {
+          setTimeout(showInstallBanner, 2500);
+        }
+      });
+
+      function showInstallBanner() {
+        if (document.getElementById('pwa-banner')) return;
+        var banner = document.createElement('div');
+        banner.id = 'pwa-banner';
+        banner.style.cssText = [
+          'position:fixed', 'bottom:84px', 'left:50%', 'transform:translateX(-50%)',
+          'background:#0F1E3E', 'border:1px solid rgba(200,154,42,0.45)',
+          'border-radius:16px', 'padding:10px 14px', 'display:flex',
+          'align-items:center', 'gap:12px', 'z-index:99998',
+          'box-shadow:0 8px 32px rgba(0,0,0,0.55)', 'max-width:92vw',
+          'animation:pwaSlide 0.35s ease', 'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif'
+        ].join(';');
+        banner.innerHTML =
+          '<style>@keyframes pwaSlide{from{opacity:0;transform:translateX(-50%) translateY(16px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}</style>' +
+          '<img src="/icons/icon-192.png" style="width:38px;height:38px;border-radius:10px;flex-shrink:0;" onerror="this.style.display=\'none\'" />' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="color:#fff;font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Instalar Super Escola</div>' +
+            '<div style="color:rgba(255,255,255,0.55);font-size:11px;">Adicionar ao ecr&#227; inicial</div>' +
+          '</div>' +
+          '<button id="pwa-install-btn" style="background:#C89A2A;color:#000;border:none;border-radius:10px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;">Instalar</button>' +
+          '<button id="pwa-dismiss-btn" style="background:transparent;border:none;color:rgba(255,255,255,0.4);font-size:22px;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0;">&times;</button>';
+        document.body.appendChild(banner);
+
+        document.getElementById('pwa-install-btn').addEventListener('click', function () {
+          banner.remove();
+          if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then(function () { deferredPrompt = null; });
+          }
+        });
+        document.getElementById('pwa-dismiss-btn').addEventListener('click', function () {
+          banner.remove();
+          sessionStorage.setItem(DISMISS_KEY, '1');
+        });
+      }
+
+      window.addEventListener('appinstalled', function () {
+        var b = document.getElementById('pwa-banner');
+        if (b) b.remove();
+        deferredPrompt = null;
+      });
+    }());
+
+    // Bloqueia pull-to-refresh no Android Chrome/WebView — v4
+    // Percorre TODA a cadeia de ancestrais: só permite o gesto se algum
+    // contentor com scroll vertical estiver deslocado do topo (scrollTop > 0).
+    var __ptr_startY = 0;
+    document.addEventListener('touchstart', function(e) {
+      __ptr_startY = e.touches[0].clientY;
+    }, { passive: true });
+
+    document.addEventListener('touchmove', function(e) {
+      var deltaY = e.touches[0].clientY - __ptr_startY;
+      if (deltaY <= 0) return; // a puxar para CIMA — sem risco de PTR
+
+      // Percorrer TODOS os ancestrais: se algum scrollable estiver > 0 do topo, deixar passar
+      var el = e.target;
+      while (el && el !== document.documentElement) {
+        var style = window.getComputedStyle(el);
+        var ovY = style.overflowY;
+        var canScrollY = (ovY === 'scroll' || ovY === 'auto');
+        if (canScrollY && el.scrollTop > 0) {
+          return; // este contentor está deslocado — é scroll legítimo, não PTR
+        }
+        el = el.parentElement;
+      }
+
+      // Nenhum ancestral scrollable estava acima do topo — bloquear PTR
+      e.preventDefault();
+    }, { passive: false });
+  </script>
+  </body>
+</html>

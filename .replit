@@ -1,0 +1,91 @@
+modules = ["nodejs-20", "bash", "web", "python-3.12"]
+[agent]
+expertMode = true
+stack = "BEST_EFFORT_FALLBACK"
+
+[nix]
+channel = "stable-25_05"
+packages = ["gitFull", "glibcLocales", "gnupg"]
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "check-styles"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Publicar no GitHub"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "bash scripts/start.sh"
+waitForPort = 5000
+
+[[workflows.workflow]]
+name = "check-styles"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node scripts/check-undefined-styles.js"
+
+[workflows.workflow.metadata]
+isValidation = true
+
+[[workflows.workflow]]
+name = "Publicar no GitHub"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python3 scripts/push_github.py"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[userenv]
+
+[userenv.shared]
+PORT = "5000"
+SERVE_STATIC_WEB = "1"
+PUPPETEER_SKIP_DOWNLOAD = "true"
+AFRICASTALKING_USERNAME = "sandbox"
+TELEGRAM_BOT_USERNAME = "Liceu303Bot"
+APP_URL = "https://liceun303.live"
+PUPPETEER_EXECUTABLE_PATH = "/run/current-system/sw/bin/chromium"
+EMAIL_FROM = "noreply@liceun303.live"
+VAPID_PUBLIC_KEY = "BEnYIg-pnRJkYbEvLurvtUVZDCpQiTptDLnZsDkxB5fJsWOQ5iofcEqaqTokRmdmt0JOJaCtSgrGNMzBpmXJrng"
+NODE_ENV = "production"
+VAPID_SUBJECT = "mailto:admin@superescola.ao"
+WHATSAPP_NOTIFY_NUMBER = "244926219731"
+TERMII_SENDER_ID = "LICEU303"
+
+[userenv.development]
+
+[userenv.production]
+
+[[ports]]
+localPort = 5000
+externalPort = 5000
+
+[[ports]]
+localPort = 23636
+externalPort = 80

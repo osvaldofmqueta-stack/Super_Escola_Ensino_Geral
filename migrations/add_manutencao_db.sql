@@ -1,0 +1,4 @@
+ALTER TABLE public.config_geral
+  ADD COLUMN IF NOT EXISTS manutencao_ativa BOOLEAN NOT NULL DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS manutencao_mensagem TEXT NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS manutencao_ativada_em TIMESTAMPTZ;
